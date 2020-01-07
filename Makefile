@@ -70,6 +70,7 @@ userspace/rv32gc/default/.config: $(addprefix userspace/,$(git -C buildroot/ ls-
 # Runs tests in QEMU, both in 32-bit mode and 64-bit mode.
 TARGETS += qemu-rv64gc-virt-smp4
 target/qemu-rv64gc-virt-smp4/run: tools/make-qemu-wrapper
+	mkdir -p $(dir $@)
 	$< --output "$@" --machine virt --memory 8G --smp 4 --isa rv64gcsu-v1.10.0 --qemu $(QEMU_RISCV64)
 
 target/qemu-rv64gc-virt-smp4/kernel/%: kernel/rv64gc/%/arch/riscv/boot/Image
@@ -84,6 +85,7 @@ check/qemu-rv64%: $(QEMU_RISCV64)
 
 TARGETS += qemu-rv32gc-virt-smp4
 target/qemu-rv32gc-virt-smp4/run: tools/make-qemu-wrapper
+	mkdir -p $(dir $@)
 	$< --output "$@" --machine virt --memory 8G --smp 4 --isa rv32gcsu-v1.10.0 --qemu $(QEMU_RISCV32)
 
 target/qemu-rv32gc-virt-smp4/kernel/%: kernel/rv32gc/%/arch/riscv/boot/Image
