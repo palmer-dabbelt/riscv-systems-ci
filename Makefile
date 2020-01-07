@@ -45,6 +45,8 @@ kernel/rv32gc/default/.config: $(addprefix linux/,$(git -C linux/ ls-files))
 	$(MAKE) -C linux/ O=$(abspath $(dir $@)) ARCH=riscv CROSS_COMPILE=riscv64-linux-gnu- rv32_defconfig
 	touch -c $@
 
+check/qemu-rv32%: $(QEMU_RISCV32)
+
 # Builds generic buildroot images, which are also just based on our defconfig.
 userspace/%/images/rootfs.cpio: userspace/%/stamp
 	touch -c $@
@@ -77,6 +79,8 @@ target/qemu-rv64gc-virt-smp4/kernel/%: kernel/rv64gc/%/arch/riscv/boot/Image
 target/qemu-rv64gc-virt-smp4/initrd/%: userspace/rv64gc/%/images/rootfs.cpio
 	mkdir -p $(dir $@)
 	cp $< $@
+
+check/qemu-rv64%: $(QEMU_RISCV64)
 
 TARGETS += qemu-rv32gc-virt-smp4
 target/qemu-rv32gc-virt-smp4/run: tools/make-qemu-wrapper
