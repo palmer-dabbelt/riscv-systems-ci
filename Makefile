@@ -86,7 +86,7 @@ check/qemu-rv64%: $(QEMU_RISCV64)
 TARGETS += qemu-rv32gc-virt-smp4
 target/qemu-rv32gc-virt-smp4/run: tools/make-qemu-wrapper
 	mkdir -p $(dir $@)
-	$< --output "$@" --machine virt --memory 8G --smp 4 --isa rv32gcsu-v1.10.0 --qemu $(QEMU_RISCV32)
+	$< --output "$@" --machine virt --memory 1G --smp 4 --isa rv32gcsu-v1.10.0 --qemu $(QEMU_RISCV32)
 
 target/qemu-rv32gc-virt-smp4/kernel/%: kernel/rv32gc/%/arch/riscv/boot/Image
 	mkdir -p $(dir $@)
