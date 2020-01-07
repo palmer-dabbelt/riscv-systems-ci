@@ -44,17 +44,17 @@ tmp=\$(mktemp -d)
 mkfifo \$tmp/guest.in \$tmp/guest.out
 trap "rm -rf \$tmp" EXIT
 
-$(readlink -f "$qemu") \
-        -M "$machine" \
-        -m "$memory" \
-        -smp "$smp" \
-        -cpu "$isa" \
-        -kernel "\$kernel" \
-        -initrd "\$initrd" \
-        -serial mon:pipe:"\$tmp/guest" \
-        -bios default \
-        -nographic \
-        -netdev user,id=u1 -device virtio-net,netdev=u1 \
+$qemu \\
+        -M "$machine" \\
+        -m "$memory" \\
+        -smp "$smp" \\
+        -cpu "$isa" \\
+        -kernel "\$kernel" \\
+        -initrd "\$initrd" \\
+        -serial mon:pipe:"\$tmp/guest" \\
+        -bios default \\
+        -nographic \\
+        -netdev user,id=u1 -device virtio-net,netdev=u1 \\
         &
 
 tools/buildroot-login --pipes \$tmp/guest --stdin \$stdin --stdout \$stdout &
