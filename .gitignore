@@ -1,0 +1,5 @@
+*.swp
+/check
+/target
+/userspace
+/kernel

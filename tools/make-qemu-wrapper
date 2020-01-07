@@ -1,0 +1,66 @@
+#!/bin/bash
+
+unset output
+unset machine
+unset memory
+unset smp
+unset isa
+while [[ "$1" != "" ]]
+do
+    case "$1"
+    in
+    --output)     output="$2";    shift 2;;
+    --machine)    machine="$2";   shift 2;;
+    --memory)     memory="$2";    shift 2;;
+    --smp)        smp="$2";       shift 2;;
+    --isa)        isa="$2";       shift 2;;
+    --qemu)       qemu="$2";      shift 2;;
+    *) exit 1;
+
+    esac
+done
+
+cat >"$output" <<EOF
+#!/bin/bash
+
+unset stdout
+unset stdin
+unset kernel
+unset initrd
+while [[ "\$1" != "" ]]
+do
+    case "\$1"
+    in
+    \$0)                        shift 1;;
+    --output)   stdout="\$2";   shift 2;;
+    */kernel)   kernel="\$1";   shift 1;;
+    */initrd)   initrd="\$1";   shift 1;;
+    */stdin)    stdin="\$1";    shift 1;;
+    *) exit 1;;
+    esac
+done
+
+tmp=\$(mktemp -d)
+mkfifo \$tmp/guest.in \$tmp/guest.out
+trap "rm -rf \$tmp" EXIT
+
+$(readlink -f "$qemu") \
+        -M "$machine" \
+        -m "$memory" \
+        -smp "$smp" \
+        -cpu "$isa" \
+        -kernel "\$kernel" \
+        -initrd "\$initrd" \
+        -serial mon:pipe:"\$tmp/guest" \
+        -bios default \
+        -nographic \
+        -netdev user,id=u1 -device virtio-net,netdev=u1 \
+        &
+
+tools/buildroot-login --pipes \$tmp/guest --stdin \$stdin --stdout \$stdout &
+
+wait
+EOF
+chmod +x "$output"
+
+exit 0

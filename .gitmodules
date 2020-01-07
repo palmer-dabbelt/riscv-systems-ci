@@ -1,0 +1,9 @@
+[submodule "qemu"]
+	path = qemu
+	url = git://github.com/palmer-dabbelt/qemu.git
+[submodule "linux"]
+	path = linux
+	url = git://git.kernel.org/pub/scm/linux/kernel/git/riscv/linux.git
+[submodule "buildroot"]
+	path = buildroot
+	url = git://git.buildroot.net/buildroot

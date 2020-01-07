@@ -1,0 +1,12 @@
+#!/bin/bash
+
+NPASS=0
+NEROR=0
+NFAIL=0
+
+while [[ "$1" != "" ]]
+do
+    echo "$1"
+done
+
+exit 0

@@ -1,0 +1,7 @@
+#!/bin/bash
+
+git "$@" clean -dfx
+git "$@" submodule foreach --quiet pwd | while read f
+do
+    $0 -C "$f"
+done

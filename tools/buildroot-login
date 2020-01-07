@@ -1,0 +1,25 @@
+#!/bin/bash
+
+unset pipes
+unset stdin
+unset stdout
+while [[ "$1" != "" ]]
+do
+    case "$1"
+    in
+    --pipes)    pipes="$2";    shift 2;;
+    --stdin)    stdin="$2";    shift 2;;
+    --stdout)   stdout="$2";   shift 2;;
+    *) exit 1;;
+    esac
+done
+
+cat "$pipes".out > "$stdout" &
+tail -F "$stdout" | grep -q "Welcome to Buildroot"
+cat "$stdin" | while read line
+do
+    echo "$line" > "$pipes".in
+    # FIXME: This is usually a bad idea...
+    sleep 1s
+done
+wait
