@@ -1,3 +1,5 @@
+.SECONDARY:
+
 # This top-level Makefile itself just builds a bunch of tools, the actual tests
 # are loaded later.  This default target reports the result of the test suite's
 # run.
@@ -27,25 +29,36 @@ qemu/stamp: $(shell git -C qemu ls-files --recurse-submodules | grep -v ' ' | se
 	$(MAKE) -C $(dir $@)
 	date > $@
 
+qemu/stamp-check: qemu/stamp
+	$(MAKE) -C $(dir $@) -j8 check |& tee $@
+	touch -c $@
+
+## Explicitly adds the QEMU test cases to "make check"
+#check: qemu/stamp-check
+
 # Builds generic Linux images, which are just based on our defconfig.
 kernel/%/arch/riscv/boot/Image: kernel/%/stamp
 	touch -c $@
 
-kernel/%/stamp: kernel/%/.config
+kernel/%/stamp: kernel/%/.config $(addprefix linux/,$(git -C linux/ ls-files))
 	$(MAKE) -C linux/ O=$(abspath $(dir $@)) ARCH=riscv CROSS_COMPILE=riscv64-linux-gnu-
 	date > $@
 
-kernel/rv64gc/default/.config: $(addprefix linux/,$(git -C linux/ ls-files))
+kernel/rv64gc/%/.config: $(addprefix linux/,$(git -C linux/ ls-files))
 	mkdir -p $(dir $@)
-	$(MAKE) -C linux/ O=$(abspath $(dir $@)) ARCH=riscv CROSS_COMPILE=riscv64-linux-gnu- defconfig
+	$(MAKE) -C linux/ O=$(abspath $(dir $@)) ARCH=riscv CROSS_COMPILE=riscv64-linux-gnu- $(word 3,$(subst /, ,$@))
 	touch -c $@
 
-kernel/rv32gc/default/.config: $(addprefix linux/,$(git -C linux/ ls-files))
+kernel/rv32gc/%/.config: $(addprefix linux/,$(git -C linux/ ls-files))
 	mkdir -p $(dir $@)
-	$(MAKE) -C linux/ O=$(abspath $(dir $@)) ARCH=riscv CROSS_COMPILE=riscv64-linux-gnu- rv32_defconfig
+	$(MAKE) -C linux/ O=$(abspath $(dir $@)) ARCH=riscv CROSS_COMPILE=riscv64-linux-gnu- rv32_$(word 3,$(subst /, ,$@))
 	touch -c $@
 
-check/qemu-rv32%: $(QEMU_RISCV32)
+# Explicitly adds some build-only kernel configs
+check: kernel/rv32gc/defconfig/stamp
+check: kernel/rv64gc/allnoconfig/stamp
+check: kernel/rv64gc/allmodconfig/stamp
+check: kernel/rv64gc/allyesconfig/stamp
 
 # Builds generic buildroot images, which are also just based on our defconfig.
 userspace/%/images/rootfs.cpio: userspace/%/stamp
@@ -69,9 +82,9 @@ userspace/rv32gc/default/.config: $(addprefix userspace/,$(git -C buildroot/ ls-
 
 # Runs tests in QEMU, both in 32-bit mode and 64-bit mode.
 TARGETS += qemu-rv64gc-virt-smp4
-target/qemu-rv64gc-virt-smp4/run: tools/make-qemu-wrapper
+target/qemu-rv64gc-virt-smp4/run: tools/make-qemu-wrapper $(QEMU_RISCV64)
 	mkdir -p $(dir $@)
-	$< --output "$@" --machine virt --memory 8G --smp 4 --isa rv64gcsu-v1.10.0 --qemu $(QEMU_RISCV64)
+	$< --output "$@" --machine virt --memory 32G --smp 4 --isa rv64gcsu-v1.10.0 --qemu $(QEMU_RISCV64)
 
 target/qemu-rv64gc-virt-smp4/kernel/%: kernel/rv64gc/%/arch/riscv/boot/Image
 	mkdir -p $(dir $@)
@@ -81,10 +94,8 @@ target/qemu-rv64gc-virt-smp4/initrd/%: userspace/rv64gc/%/images/rootfs.cpio
 	mkdir -p $(dir $@)
 	cp $< $@
 
-check/qemu-rv64%: $(QEMU_RISCV64)
-
-TARGETS += qemu-rv32gc-virt-smp4
-target/qemu-rv32gc-virt-smp4/run: tools/make-qemu-wrapper
+#TARGETS += qemu-rv32gc-virt-smp4
+target/qemu-rv32gc-virt-smp4/run: tools/make-qemu-wrapper $(QEMU_RISCV32)
 	mkdir -p $(dir $@)
 	$< --output "$@" --machine virt --memory 1G --smp 4 --isa rv32gcsu-v1.10.0 --qemu $(QEMU_RISCV32)
 
@@ -96,18 +107,32 @@ target/qemu-rv32gc-virt-smp4/initrd/%: userspace/rv32gc/%/images/rootfs.cpio
 	mkdir -p $(dir $@)
 	cp $< $@
 
+# A HiFive Unleashed-like board
+#TARGETS += qemu-rv64gc-h5u-smp5
+target/qemu-rv64gc-h5u-smp5/run: tools/make-qemu-wrapper $(QEMU_RISCV64)
+	mkdir -p $(dir $@)
+	$< --output "$@" --machine sifive_u --memory 8G --smp 5 --isa rv64gcsu-v1.10.0 --qemu $(QEMU_RISCV64)
+
+target/qemu-rv64gc-h5u-smp5/kernel/%: kernel/rv64gc/%/arch/riscv/boot/Image
+	mkdir -p $(dir $@)
+	cp $< $@
+
+target/qemu-rv64gc-h5u-smp5/initrd/%: userspace/rv64gc/%/images/rootfs.cpio
+	mkdir -p $(dir $@)
+	cp $< $@
+
 # Just halts the target.
-TESTS += halt
+TESTS += halt-defconfig
 
-check/%/halt/initrd: target/%/initrd/default
+check/%/halt-defconfig/initrd: target/%/initrd/default
 	mkdir -p $(dir $@)
 	cp $< $@
 
-check/%/halt/kernel: target/%/kernel/default
+check/%/halt-defconfig/kernel: target/%/kernel/defconfig
 	mkdir -p $(dir $@)
 	cp $< $@
 
-check/%/halt/stdin:
+check/%/halt-defconfig/stdin:
 	mkdir -p $(dir $@)
 	echo "root" >  $@
 	echo "halt" >> $@
