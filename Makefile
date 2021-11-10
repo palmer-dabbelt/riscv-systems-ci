@@ -19,15 +19,15 @@ clean:
 
 # Builds QEMU from git source.  There's been an attempt at detecting
 # dependencies here, but nothing serious.
-QEMU_RISCV64 = qemu/riscv64-softmmu/qemu-system-riscv64
-QEMU_RISCV32 = qemu/riscv32-softmmu/qemu-system-riscv32
+QEMU_RISCV64 = qemu/build/qemu-system-riscv64
+QEMU_RISCV32 = qemu/build/qemu-system-riscv32
 
 qemu/riscv32-softmmu/qemu-system-riscv32 qemu/riscv64-softmmu/qemu-system-riscv64: qemu/stamp
 	touch -c $@
 
 qemu/stamp: \
 		$(shell git -C qemu ls-files --recurse-submodules | grep -v ' ' | sed 's@^@qemu/@' | xargs readlink -e)
-	env -C $(dir $@) ./configure --prefix=$(readlink -f $(dir $@)/install) --target-list=riscv64-softmmu,riscv32-softmmu
+	env -C $(dir $@) ./configure --prefix="$(abspath $(shell readlink -f $(dir $@)/install))" --target-list=riscv64-softmmu,riscv32-softmmu
 	$(MAKE) -C $(dir $@)
 	date > $@
 
@@ -45,22 +45,21 @@ kernel/%/arch/riscv/boot/Image: kernel/%/stamp
 kernel/%/stamp: \
 		kernel/%/.config \
 		$(shell git -C linux ls-files | sed 's@^@linux/@' | xargs readlink -e)
-	$(MAKE) -C linux/ O=$(abspath $(dir $@)) ARCH=riscv CROSS_COMPILE=riscv64-linux-gnu-
+	$(MAKE) -C linux/ O=$(abspath $(dir $@)) ARCH=riscv CROSS_COMPILE=riscv64-unknown-linux-gnu-
 	date > $@
 
 kernel/rv64gc/%/.config: \
-		$(wildcard linux/arch/riscv/configs/%) \
+		linux/arch/riscv/configs/defconfig) \
 		$(shell git -C linux ls-files | sed 's@^@linux/@' | xargs readlink -e | grep Kconfig)
 	mkdir -p $(dir $@)
-	$(MAKE) -C linux/ O=$(abspath $(dir $@)) ARCH=riscv CROSS_COMPILE=riscv64-linux-gnu- $(word 3,$(subst /, ,$@))
+	$(MAKE) -C linux/ O=$(abspath $(dir $@)) ARCH=riscv CROSS_COMPILE=riscv64-unknown-linux-gnu- defconfig
 	touch -c $@
 
 kernel/rv32gc/%/.config: \
-		$(wildcard linux/arch/riscv/configs/rv32_%) \
+		linux/arch/riscv/configs/rv32_defconfig \
 		$(shell git -C linux ls-files | sed 's@^@linux/@' | xargs readlink -e | grep Kconfig)
 	mkdir -p $(dir $@)
-	$(MAKE) -C linux/ O=$(abspath $(dir $@)) ARCH=riscv CROSS_COMPILE=riscv64-linux-gnu- $(word 3,$(subst /, ,$@))
-	$(MAKE) -C linux/ O=$(abspath $(dir $@)) ARCH=riscv CROSS_COMPILE=riscv64-linux-gnu- CONFIG_64BIT=n olddefconfig
+	$(MAKE) -C linux/ O=$(abspath $(dir $@)) ARCH=riscv CROSS_COMPILE=riscv64-unknown-linux-gnu- rv32_defconfig
 	touch -c $@
 
 # Explicitly adds some build-only kernel configs
@@ -99,7 +98,7 @@ userspace/rv32gc/default/.config: \
 TARGETS += qemu-rv64gc-virt-smp4
 target/qemu-rv64gc-virt-smp4/run: tools/make-qemu-wrapper $(QEMU_RISCV64)
 	mkdir -p $(dir $@)
-	$< --output "$@" --machine virt --memory 32G --smp 4 --isa rv64gcsu-v1.10.0 --qemu $(QEMU_RISCV64)
+	$< --output "$@" --machine virt --memory 8G --smp 4 --isa rv64 --qemu $(QEMU_RISCV64)
 
 target/qemu-rv64gc-virt-smp4/kernel/%: kernel/rv64gc/%/arch/riscv/boot/Image
 	mkdir -p $(dir $@)
@@ -109,10 +108,10 @@ target/qemu-rv64gc-virt-smp4/initrd/%: userspace/rv64gc/%/images/rootfs.cpio
 	mkdir -p $(dir $@)
 	cp $< $@
 
-#TARGETS += qemu-rv32gc-virt-smp4
+TARGETS += qemu-rv32gc-virt-smp4
 target/qemu-rv32gc-virt-smp4/run: tools/make-qemu-wrapper $(QEMU_RISCV32)
 	mkdir -p $(dir $@)
-	$< --output "$@" --machine virt --memory 1G --smp 4 --isa rv32gcsu-v1.10.0 --qemu $(QEMU_RISCV32)
+	$< --output "$@" --machine virt --memory 1G --smp 4 --isa rv32 --qemu $(QEMU_RISCV32)
 
 target/qemu-rv32gc-virt-smp4/kernel/%: kernel/rv32gc/%/arch/riscv/boot/Image
 	mkdir -p $(dir $@)
