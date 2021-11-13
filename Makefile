@@ -34,8 +34,8 @@ toolchain/Makefile: riscv-gnu-toolchain/configure
 
 # Builds QEMU from git source.  There's been an attempt at detecting
 # dependencies here, but nothing serious.
-QEMU_RISCV64 = qemu/build/qemu-system-riscv64
-QEMU_RISCV32 = qemu/build/qemu-system-riscv32
+QEMU_RISCV64 = qemu/install/bin/qemu-system-riscv64
+QEMU_RISCV32 = qemu/install/bin/qemu-system-riscv32
 
 $(QEMU_RISCV32) $(QEMU_RISCV64): qemu/stamp
 	touch -c $@
@@ -44,6 +44,7 @@ qemu/stamp: \
 		$(shell git -C qemu ls-files --recurse-submodules | grep -v ' ' | sed 's@^@qemu/@' | xargs readlink -e)
 	env -C $(dir $@) ./configure --prefix="$(abspath $(shell readlink -f $(dir $@)/install))" --target-list=riscv64-softmmu,riscv32-softmmu
 	$(MAKE) -C $(dir $@)
+	$(MAKE) -C $(dir $@) install
 	date > $@
 
 qemu/stamp-check: qemu/stamp
