@@ -1,12 +1,11 @@
 #!/bin/bash
 
-NPASS=0
-NEROR=0
-NFAIL=0
-
-while [[ "$1" != "" ]]
+find check/ -name "stdout" | while read f
 do
-    echo "$1"
+    echo "$f"
+    grep BUG "$f" && exit 1
+    grep "reboot: System halted" "$f" || exit 1
 done
 
+echo "OK"
 exit 0

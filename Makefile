@@ -5,7 +5,7 @@
 # run.
 .PHONY: report
 report: check
-	@tools/report
+	tools/report
 
 # Acutally runs the tests.  This itself doesn't really do much, it's just a
 # redirect to run every test.
