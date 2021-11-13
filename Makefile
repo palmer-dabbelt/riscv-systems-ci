@@ -65,7 +65,7 @@ kernel/%/stamp: \
 	$(MAKE) -C linux/ O=$(abspath $(dir $@)) ARCH=riscv CROSS_COMPILE=riscv64-unknown-linux-gnu-
 	date > $@
 
-kernel/rv64gc/%/.config: \
+kernel/rv64gc/defconfig/.config: \
 		linux/arch/riscv/configs/defconfig \
 		toolchain/install.stamp \
 		$(shell git -C linux ls-files | sed 's@^@linux/@' | xargs readlink -e | grep Kconfig)
@@ -74,13 +74,37 @@ kernel/rv64gc/%/.config: \
 	$(MAKE) -C linux/ O=$(abspath $(dir $@)) ARCH=riscv CROSS_COMPILE=riscv64-unknown-linux-gnu- defconfig
 	touch -c $@
 
-kernel/rv32gc/%/.config: \
+kernel/rv32gc/defconfig/.config: \
 		linux/arch/riscv/configs/rv32_defconfig \
 		toolchain/install.stamp \
 		$(shell git -C linux ls-files | sed 's@^@linux/@' | xargs readlink -e | grep Kconfig)
 	mkdir -p $(dir $@)
 	rm -f $@
 	$(MAKE) -C linux/ O=$(abspath $(dir $@)) ARCH=riscv CROSS_COMPILE=riscv64-unknown-linux-gnu- rv32_defconfig
+	touch -c $@
+
+kernel/rv64gc/%/.config: \
+		configs/linux/% \
+		linux/arch/riscv/configs/defconfig \
+		toolchain/install.stamp \
+		$(shell git -C linux ls-files | sed 's@^@linux/@' | xargs readlink -e | grep Kconfig)
+	mkdir -p $(dir $@)
+	rm -f $@
+	$(MAKE) -C linux/ O=$(abspath $(dir $@)) ARCH=riscv CROSS_COMPILE=riscv64-unknown-linux-gnu- defconfig
+	cat $< >> $@
+	$(MAKE) -C linux/ O=$(abspath $(dir $@)) ARCH=riscv CROSS_COMPILE=riscv64-unknown-linux-gnu- olddefconfig
+	touch -c $@
+
+kernel/rv32gc/%/.config: \
+		configs/linux/% \
+		linux/arch/riscv/configs/rv32_defconfig \
+		toolchain/install.stamp \
+		$(shell git -C linux ls-files | sed 's@^@linux/@' | xargs readlink -e | grep Kconfig)
+	mkdir -p $(dir $@)
+	rm -f $@
+	$(MAKE) -C linux/ O=$(abspath $(dir $@)) ARCH=riscv CROSS_COMPILE=riscv64-unknown-linux-gnu- rv32_defconfig
+	cat $< >> $@
+	$(MAKE) -C linux/ O=$(abspath $(dir $@)) ARCH=riscv CROSS_COMPILE=riscv64-unknown-linux-gnu- olddefconfig
 	touch -c $@
 
 kernel/rv64gc/all%config/.config: \
@@ -189,6 +213,8 @@ check/%/$1-$2/stdin: tests/$1
 endef
 
 $(eval $(call mktest,halt,defconfig))
+$(eval $(call mktest,halt,kasan))
+$(eval $(call mktest,halt,kasan_vmalloc))
 
 # Expands out the total list of tests
 define expand =
