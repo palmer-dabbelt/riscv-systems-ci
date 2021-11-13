@@ -22,7 +22,7 @@ clean:
 QEMU_RISCV64 = qemu/build/qemu-system-riscv64
 QEMU_RISCV32 = qemu/build/qemu-system-riscv32
 
-qemu/riscv32-softmmu/qemu-system-riscv32 qemu/riscv64-softmmu/qemu-system-riscv64: qemu/stamp
+$(QEMU_RISCV32) $(QEMU_RISCV64): qemu/stamp
 	touch -c $@
 
 qemu/stamp: \
@@ -49,17 +49,33 @@ kernel/%/stamp: \
 	date > $@
 
 kernel/rv64gc/%/.config: \
-		linux/arch/riscv/configs/defconfig) \
+		linux/arch/riscv/configs/% \
 		$(shell git -C linux ls-files | sed 's@^@linux/@' | xargs readlink -e | grep Kconfig)
 	mkdir -p $(dir $@)
+	rm -f $@
 	$(MAKE) -C linux/ O=$(abspath $(dir $@)) ARCH=riscv CROSS_COMPILE=riscv64-unknown-linux-gnu- defconfig
 	touch -c $@
 
 kernel/rv32gc/%/.config: \
-		linux/arch/riscv/configs/rv32_defconfig \
+		linux/arch/riscv/configs/rv32_% \
 		$(shell git -C linux ls-files | sed 's@^@linux/@' | xargs readlink -e | grep Kconfig)
 	mkdir -p $(dir $@)
+	rm -f $@
 	$(MAKE) -C linux/ O=$(abspath $(dir $@)) ARCH=riscv CROSS_COMPILE=riscv64-unknown-linux-gnu- rv32_defconfig
+	touch -c $@
+
+kernel/rv64gc/all%config/.config: \
+		$(shell git -C linux ls-files | sed 's@^@linux/@' | xargs readlink -e | grep Kconfig)
+	mkdir -p $(dir $@)
+	rm -f $@
+	$(MAKE) -C linux/ O=$(abspath $(dir $@)) ARCH=riscv CROSS_COMPILE=riscv64-unknown-linux-gnu- KCONFIG_ALLCONFIG=$(abspath linux/arch/riscv/configs/64-bit.config) $(word 3,$(subst /, ,$@))
+	touch -c $@
+
+kernel/rv32gc/all%config/.config: \
+		$(shell git -C linux ls-files | sed 's@^@linux/@' | xargs readlink -e | grep Kconfig)
+	mkdir -p $(dir $@)
+	rm -f $@
+	$(MAKE) -C linux/ O=$(abspath $(dir $@)) ARCH=riscv CROSS_COMPILE=riscv64-unknown-linux-gnu- KCONFIG_ALLCONFIG=$(abspath linux/arch/riscv/configs/32-bit.config) $(word 3,$(subst /, ,$@))
 	touch -c $@
 
 # Explicitly adds some build-only kernel configs
