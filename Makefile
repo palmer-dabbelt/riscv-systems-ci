@@ -65,7 +65,7 @@ kernel/%/stamp: \
 	date > $@
 
 kernel/rv64gc/%/.config: \
-		linux/arch/riscv/configs/defconfig) \
+		linux/arch/riscv/configs/defconfig \
 		toolchain/install.stamp \
 		$(shell git -C linux ls-files | sed 's@^@linux/@' | xargs readlink -e | grep Kconfig)
 	mkdir -p $(dir $@)
@@ -170,21 +170,24 @@ target/qemu-rv64gc-h5u-smp5/initrd/%: userspace/rv64gc/%/images/rootfs.cpio
 	cp $< $@
 
 # Just halts the target.
-TESTS += halt-defconfig
+define mktest =
+TESTS += $1-$2
 
-check/%/halt-defconfig/initrd: target/%/initrd/default
-	mkdir -p $(dir $@)
-	cp $< $@
+check/%/$1-$2/initrd: target/%/initrd/default
+	mkdir -p $$(dir $$@)
+	cp $$< $$@
 
-check/%/halt-defconfig/kernel: target/%/kernel/defconfig
-	mkdir -p $(dir $@)
-	cp $< $@
+check/%/$1-$2/kernel: target/%/kernel/$2
+	mkdir -p $$(dir $$@)
+	cp $$< $$@
 
-check/%/halt-defconfig/stdin:
-	mkdir -p $(dir $@)
-	echo "root" >  $@
-	echo "halt" >> $@
-	touch -c $@
+check/%/$1-$2/stdin: tests/$1
+	mkdir -p $$(dir $$@)
+	cp $$< $$@
+	touch -c $$@
+endef
+
+$(eval $(call mktest,halt,defconfig))
 
 # Expands out the total list of tests
 define expand =
