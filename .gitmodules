@@ -7,3 +7,6 @@
 [submodule "buildroot"]
 	path = buildroot
 	url = git://git.buildroot.net/buildroot
+[submodule "riscv-gnu-toolchain"]
+	path = riscv-gnu-toolchain
+	url = git://github.com/riscv/riscv-gnu-toolchain.git

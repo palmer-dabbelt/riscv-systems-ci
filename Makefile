@@ -17,6 +17,21 @@ check:
 clean:
 	tools/git-clean-recursive
 
+# Builds GCC from the RISC-V integration repo
+GCC = toolchain/install/bin/riscv64-unknown-linux-gcc
+$(GCC): toolchain/install.stamp
+
+PATH := $(abspath $(dir $(GCC))):$(PATH)
+export PATH
+
+toolchain/install.stamp: toolchain/Makefile
+	$(MAKE) -C $(dir $<)
+	date > $@
+
+toolchain/Makefile: riscv-gnu-toolchain/configure
+	mkdir -p $(dir $@)
+	env -C $(dir $@) $(abspath $<) --prefix="$(abspath $(dir $@)/install)" --enable-linux
+
 # Builds QEMU from git source.  There's been an attempt at detecting
 # dependencies here, but nothing serious.
 QEMU_RISCV64 = qemu/build/qemu-system-riscv64
@@ -44,12 +59,14 @@ kernel/%/arch/riscv/boot/Image: kernel/%/stamp
 
 kernel/%/stamp: \
 		kernel/%/.config \
+		toolchain/install.stamp \
 		$(shell git -C linux ls-files | sed 's@^@linux/@' | xargs readlink -e)
 	$(MAKE) -C linux/ O=$(abspath $(dir $@)) ARCH=riscv CROSS_COMPILE=riscv64-unknown-linux-gnu-
 	date > $@
 
 kernel/rv64gc/%/.config: \
-		linux/arch/riscv/configs/% \
+		linux/arch/riscv/configs/defconfig) \
+		toolchain/install.stamp \
 		$(shell git -C linux ls-files | sed 's@^@linux/@' | xargs readlink -e | grep Kconfig)
 	mkdir -p $(dir $@)
 	rm -f $@
@@ -57,7 +74,8 @@ kernel/rv64gc/%/.config: \
 	touch -c $@
 
 kernel/rv32gc/%/.config: \
-		linux/arch/riscv/configs/rv32_% \
+		linux/arch/riscv/configs/rv32_defconfig \
+		toolchain/install.stamp \
 		$(shell git -C linux ls-files | sed 's@^@linux/@' | xargs readlink -e | grep Kconfig)
 	mkdir -p $(dir $@)
 	rm -f $@
