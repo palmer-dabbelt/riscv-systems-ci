@@ -93,6 +93,7 @@ kernel/rv64gc/%/.config: \
 	$(MAKE) -C linux/ O=$(abspath $(dir $@)) ARCH=riscv CROSS_COMPILE=riscv64-unknown-linux-gnu- defconfig
 	cat $< >> $@
 	$(MAKE) -C linux/ O=$(abspath $(dir $@)) ARCH=riscv CROSS_COMPILE=riscv64-unknown-linux-gnu- olddefconfig
+	tools/checkconfig $< $@
 	touch -c $@
 
 kernel/rv32gc/%/.config: \

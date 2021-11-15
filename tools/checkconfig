@@ -1,0 +1,8 @@
+#!/bin/bash
+
+set -ex
+
+cat "$1" | while read entry
+do
+    grep "$entry" "$2"
+done
