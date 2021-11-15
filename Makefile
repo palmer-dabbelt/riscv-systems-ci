@@ -65,22 +65,22 @@ kernel/%/stamp: \
 	$(MAKE) -C linux/ O=$(abspath $(dir $@)) ARCH=riscv CROSS_COMPILE=riscv64-unknown-linux-gnu-
 	date > $@
 
-kernel/rv64gc/defconfig/.config: \
-		linux/arch/riscv/configs/defconfig \
+kernel/rv64gc/%/.config: \
+		linux/arch/riscv/configs/% \
 		toolchain/install.stamp \
 		$(shell git -C linux ls-files | sed 's@^@linux/@' | xargs readlink -e | grep Kconfig)
 	mkdir -p $(dir $@)
 	rm -f $@
-	$(MAKE) -C linux/ O=$(abspath $(dir $@)) ARCH=riscv CROSS_COMPILE=riscv64-unknown-linux-gnu- defconfig
+	$(MAKE) -C linux/ O=$(abspath $(dir $@)) ARCH=riscv CROSS_COMPILE=riscv64-unknown-linux-gnu- $(notdir $<)
 	touch -c $@
 
-kernel/rv32gc/defconfig/.config: \
-		linux/arch/riscv/configs/rv32_defconfig \
+kernel/rv32gc/%/.config: \
+		linux/arch/riscv/configs/rv32_% \
 		toolchain/install.stamp \
 		$(shell git -C linux ls-files | sed 's@^@linux/@' | xargs readlink -e | grep Kconfig)
 	mkdir -p $(dir $@)
 	rm -f $@
-	$(MAKE) -C linux/ O=$(abspath $(dir $@)) ARCH=riscv CROSS_COMPILE=riscv64-unknown-linux-gnu- rv32_defconfig
+	$(MAKE) -C linux/ O=$(abspath $(dir $@)) ARCH=riscv CROSS_COMPILE=riscv64-unknown-linux-gnu- $(notdir $<)
 	touch -c $@
 
 kernel/rv64gc/%/.config: \
@@ -130,6 +130,9 @@ check: kernel/rv64gc/defconfig/stamp
 check: kernel/rv64gc/allnoconfig/stamp
 check: kernel/rv64gc/allmodconfig/stamp
 check: kernel/rv64gc/allyesconfig/stamp
+check: kernel/rv64gc/nommu_k210_defconfig/stamp
+check: kernel/rv64gc/nommu_k210_sdcard_defconfig/stamp
+check: kernel/rv64gc/nommu_virt_defconfig/stamp
 
 # Builds generic buildroot images, which are also just based on our defconfig.
 userspace/%/images/rootfs.cpio: userspace/%/stamp
