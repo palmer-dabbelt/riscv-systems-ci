@@ -1,0 +1,13 @@
+/.Module.symvers.cmd
+/.extmod.ko.cmd
+/.extmod.mod.cmd
+/.extmod.mod.o.cmd
+/.extmod.o.cmd
+/.modules.order.cmd
+/Module.symvers
+/extmod.ko
+/extmod.mod
+/extmod.mod.c
+/extmod.mod.o
+/extmod.o
+/modules.order

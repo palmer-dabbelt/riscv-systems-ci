@@ -122,6 +122,14 @@ kernel/rv32gc/all%config/.config: \
 	$(MAKE) -C linux/ O=$(abspath $(dir $@)) ARCH=riscv CROSS_COMPILE=riscv64-unknown-linux-gnu- KCONFIG_ALLCONFIG=$(abspath linux/arch/riscv/configs/32-bit.config) $(word 3,$(subst /, ,$@))
 	touch -c $@
 
+check: extmod/stamp
+
+extmod/stamp: \
+		kernel/rv64gc/defconfig/.config \
+		$(GCC) \
+		$(shell git -C linux ls-files | sed 's@^@linux/@' | xargs readlink -e)
+	$(MAKE) -C extmod/ ARCH=riscv CROSS_COMPILE=riscv64-unknown-linux-gnu- KDIR=$(abspath linux) O=$(abspath $(dir $<))
+
 # Explicitly adds some build-only kernel configs
 check: kernel/rv32gc/defconfig/stamp
 check: kernel/rv32gc/allnoconfig/stamp
