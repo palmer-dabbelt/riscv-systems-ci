@@ -130,6 +130,19 @@ extmod/stamp: \
 		$(shell git -C linux ls-files | sed 's@^@linux/@' | xargs readlink -e)
 	$(MAKE) -C extmod/ ARCH=riscv CROSS_COMPILE=riscv64-unknown-linux-gnu- KDIR=$(abspath linux) O=$(abspath $(dir $<))
 
+#check: check/dt_check/log
+
+check/dt_check/stamp: \
+		$(GCC) \
+		$(shell git -C linux ls-files | sed 's@^@linux/@' | xargs readlink -e)
+	@mkdir -p $(dir $@)
+	$(MAKE) -C $(abspath linux) ARCH=riscv CROSS_COMPILE=riscv64-unknown-linux-gnu- O=$(abspath $(dir $@)) defconfig
+	$(MAKE) -C $(abspath linux) ARCH=riscv CROSS_COMPILE=riscv64-unknown-linux-gnu- O=$(abspath $(dir $@)) dt_check
+	date > $@
+
+check/dt_check/log: check/dt_check/stamp
+	false
+
 # Explicitly adds some build-only kernel configs
 check: kernel/rv32gc/defconfig/stamp
 check: kernel/rv32gc/allnoconfig/stamp
