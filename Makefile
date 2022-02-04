@@ -94,6 +94,7 @@ kernel/rv64gc/%/.config: \
 	cat $< >> $@
 	-$(MAKE) -C linux/ O=$(abspath $(dir $@)) ARCH=riscv CROSS_COMPILE=riscv64-unknown-linux-gnu- olddefconfig
 	tools/checkconfig $< $@ || mv $@ $@.broken
+	-$(MAKE) -C linux/ O=$(abspath $(dir $@)) ARCH=riscv CROSS_COMPILE=riscv64-unknown-linux-gnu- savedefconfig
 	touch -c $@
 
 kernel/rv32gc/%/.config: \
@@ -107,6 +108,7 @@ kernel/rv32gc/%/.config: \
 	cat $< >> $@
 	-$(MAKE) -C linux/ O=$(abspath $(dir $@)) ARCH=riscv CROSS_COMPILE=riscv64-unknown-linux-gnu- olddefconfig
 	tools/checkconfig $< $@ || mv $@ $@.broken
+	-$(MAKE) -C linux/ O=$(abspath $(dir $@)) ARCH=riscv CROSS_COMPILE=riscv64-unknown-linux-gnu- savedefconfig
 	touch -c $@
 
 kernel/rv64gc/all%config/.config: \
@@ -209,19 +211,19 @@ target/qemu-rv32gc-virt-smp4/initrd/%: userspace/rv32gc/%/images/rootfs.cpio
 	mkdir -p $(dir $@)
 	cp $< $@
 
-# A HiFive Unleashed-like board
-#TARGETS += qemu-rv64gc-h5u-smp5
-target/qemu-rv64gc-h5u-smp5/run: tools/make-qemu-wrapper $(QEMU_RISCV64)
+TARGETS += qemu-rv64gc-virt-smp8
+target/qemu-rv64gc-virt-smp8/run: tools/make-qemu-wrapper $(QEMU_RISCV64)
 	mkdir -p $(dir $@)
-	$< --output "$@" --machine sifive_u --memory 8G --smp 5 --isa rv64gcsu-v1.10.0 --qemu $(QEMU_RISCV64)
+	$< --output "$@" --machine virt --memory 8G --smp 8 --isa rv64 --qemu $(QEMU_RISCV64)
 
-target/qemu-rv64gc-h5u-smp5/kernel/%: kernel/rv64gc/%/arch/riscv/boot/Image
+target/qemu-rv64gc-virt-smp8/kernel/%: kernel/rv64gc/%/arch/riscv/boot/Image
 	mkdir -p $(dir $@)
 	cp $< $@
 
-target/qemu-rv64gc-h5u-smp5/initrd/%: userspace/rv64gc/%/images/rootfs.cpio
+target/qemu-rv64gc-virt-smp8/initrd/%: userspace/rv64gc/%/images/rootfs.cpio
 	mkdir -p $(dir $@)
 	cp $< $@
+
 
 # Just halts the target.
 define mktest =
