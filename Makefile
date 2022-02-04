@@ -109,6 +109,7 @@ kernel/rv32gc/%/.config: \
 	touch -c $@
 
 kernel/rv64gc/all%config/.config: \
+		toolchain/install.stamp \
 		$(shell git -C linux ls-files | sed 's@^@linux/@' | xargs readlink -e | grep Kconfig)
 	mkdir -p $(dir $@)
 	rm -f $@
@@ -116,6 +117,7 @@ kernel/rv64gc/all%config/.config: \
 	touch -c $@
 
 kernel/rv32gc/all%config/.config: \
+		toolchain/install.stamp \
 		$(shell git -C linux ls-files | sed 's@^@linux/@' | xargs readlink -e | grep Kconfig)
 	mkdir -p $(dir $@)
 	rm -f $@
@@ -126,6 +128,7 @@ check: extmod/stamp
 
 extmod/stamp: \
 		kernel/rv64gc/defconfig/.config \
+		toolchain/install.stamp \
 		$(GCC) \
 		$(shell git -C linux ls-files | sed 's@^@linux/@' | xargs readlink -e)
 	$(MAKE) -C extmod/ ARCH=riscv CROSS_COMPILE=riscv64-unknown-linux-gnu- KDIR=$(abspath linux) O=$(abspath $(dir $<))
