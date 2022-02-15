@@ -92,8 +92,8 @@ kernel/rv64gc/%/.config: \
 	rm -f $@
 	$(MAKE) -C linux/ O=$(abspath $(dir $@)) ARCH=riscv CROSS_COMPILE=riscv64-unknown-linux-gnu- defconfig
 	cat $< >> $@
-	$(MAKE) -C linux/ O=$(abspath $(dir $@)) ARCH=riscv CROSS_COMPILE=riscv64-unknown-linux-gnu- olddefconfig
-	tools/checkconfig $< $@
+	-$(MAKE) -C linux/ O=$(abspath $(dir $@)) ARCH=riscv CROSS_COMPILE=riscv64-unknown-linux-gnu- olddefconfig
+	tools/checkconfig $< $@ || mv $@ $@.broken
 	touch -c $@
 
 kernel/rv32gc/%/.config: \
@@ -105,7 +105,8 @@ kernel/rv32gc/%/.config: \
 	rm -f $@
 	$(MAKE) -C linux/ O=$(abspath $(dir $@)) ARCH=riscv CROSS_COMPILE=riscv64-unknown-linux-gnu- rv32_defconfig
 	cat $< >> $@
-	$(MAKE) -C linux/ O=$(abspath $(dir $@)) ARCH=riscv CROSS_COMPILE=riscv64-unknown-linux-gnu- olddefconfig
+	-$(MAKE) -C linux/ O=$(abspath $(dir $@)) ARCH=riscv CROSS_COMPILE=riscv64-unknown-linux-gnu- olddefconfig
+	tools/checkconfig $< $@ || mv $@ $@.broken
 	touch -c $@
 
 kernel/rv64gc/all%config/.config: \
