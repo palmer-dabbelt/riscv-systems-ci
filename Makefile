@@ -125,7 +125,7 @@ kernel/rv32gc/all%config/.config: \
 	$(MAKE) -C linux/ O=$(abspath $(dir $@)) ARCH=riscv CROSS_COMPILE=riscv64-unknown-linux-gnu- KCONFIG_ALLCONFIG=$(abspath linux/arch/riscv/configs/32-bit.config) $(word 3,$(subst /, ,$@))
 	touch -c $@
 
-check: extmod/stamp
+#check: extmod/stamp
 
 extmod/stamp: \
 		kernel/rv64gc/defconfig/.config \
