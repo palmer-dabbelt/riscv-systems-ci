@@ -6,7 +6,7 @@ set -ex
 case "$2" in
 kernel/rv32gc/relocatable/.config)    exit 0;;
 kernel/rv32gc/kasan/.config)          exit 0;;
-kernel/rv32gc/kasan_vmalloc/.config)  exit 0;;
+kernel/rv32gc/kasan_*/.config)        exit 0;;
 kernel/rv32gc/vmap_stack/.config)     exit 0;;
 esac
 
