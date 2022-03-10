@@ -244,6 +244,7 @@ check/%/$1-$2/stdin: tests/$1
 endef
 
 $(eval $(call mktest,halt,defconfig))
+$(eval $(call mktest,cpuinfo,defconfig))
 $(foreach config,$(patsubst configs/linux/%,%,$(wildcard configs/linux/*)), $(eval $(call mktest,halt,$(config))))
 
 # Expands out the total list of tests

@@ -10,3 +10,6 @@
 [submodule "riscv-gnu-toolchain"]
 	path = riscv-gnu-toolchain
 	url = git://github.com/riscv/riscv-gnu-toolchain.git
+[submodule "crosstool-ng"]
+	path = crosstool-ng
+	url = https://github.com/crosstool-ng/crosstool-ng
