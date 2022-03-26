@@ -99,7 +99,7 @@ kernel/rv64gc/%/.config: \
 
 kernel/rv32gc/%/.config: \
 		configs/linux/% \
-		linux/arch/riscv/configs/rv32_defconfig \
+		linux/arch/riscv/configs/defconfig \
 		toolchain/install.stamp \
 		$(shell git -C linux ls-files | sed 's@^@linux/@' | xargs readlink -e | grep Kconfig)
 	mkdir -p $(dir $@)
