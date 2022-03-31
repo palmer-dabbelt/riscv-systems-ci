@@ -224,6 +224,31 @@ target/qemu-rv64gc-virt-smp8/initrd/%: userspace/rv64gc/%/images/rootfs.cpio
 	mkdir -p $(dir $@)
 	cp $< $@
 
+#TARGETS += qemu-rv64gc-virt-smp32
+target/qemu-rv64gc-virt-smp32/run: tools/make-qemu-wrapper $(QEMU_RISCV64)
+	mkdir -p $(dir $@)
+	$< --output "$@" --machine virt --memory 8G --smp 32 --isa rv64 --qemu $(QEMU_RISCV64)
+
+target/qemu-rv64gc-virt-smp32/kernel/%: kernel/rv64gc/%/arch/riscv/boot/Image
+	mkdir -p $(dir $@)
+	cp $< $@
+
+target/qemu-rv64gc-virt-smp32/initrd/%: userspace/rv64gc/%/images/rootfs.cpio
+	mkdir -p $(dir $@)
+	cp $< $@
+
+#TARGETS += qemu-rv64gc-virt-smp64
+target/qemu-rv64gc-virt-smp64/run: tools/make-qemu-wrapper $(QEMU_RISCV64)
+	mkdir -p $(dir $@)
+	$< --output "$@" --machine virt --memory 8G --smp 64 --isa rv64 --qemu $(QEMU_RISCV64)
+
+target/qemu-rv64gc-virt-smp64/kernel/%: kernel/rv64gc/%/arch/riscv/boot/Image
+	mkdir -p $(dir $@)
+	cp $< $@
+
+target/qemu-rv64gc-virt-smp64/initrd/%: userspace/rv64gc/%/images/rootfs.cpio
+	mkdir -p $(dir $@)
+	cp $< $@
 
 # Just halts the target.
 define mktest =
@@ -245,6 +270,8 @@ endef
 
 $(eval $(call mktest,halt,defconfig))
 $(eval $(call mktest,cpuinfo,defconfig))
+$(eval $(call mktest,cpuinfo,cpu32))
+$(eval $(call mktest,cpuinfo,cpu64))
 $(foreach config,$(patsubst configs/linux/%,%,$(wildcard configs/linux/*)), $(eval $(call mktest,halt,$(config))))
 
 # Expands out the total list of tests
