@@ -1,5 +1,7 @@
 .SECONDARY:
 
+SHELL=/bin/bash
+
 # This top-level Makefile itself just builds a bunch of tools, the actual tests
 # are loaded later.  This default target reports the result of the test suite's
 # run.
@@ -17,12 +19,13 @@ check:
 clean:
 	tools/git-clean-recursive
 
-# Builds GCC from the RISC-V integration repo
 GCC = toolchain/install/bin/riscv64-unknown-linux-gcc
-$(GCC): toolchain/install.stamp
-
-PATH := $(abspath $(dir $(GCC))):$(PATH)
+SPARSE = sparse/install/bin/sparse
+PATH := $(abspath $(dir $(GCC))):$(abspath $(dir $(SPARSE))):$(PATH)
 export PATH
+
+# Builds GCC from the RISC-V integration repo
+$(GCC): toolchain/install.stamp
 
 toolchain/install.stamp: toolchain/Makefile
 	$(MAKE) -C $(dir $<)
@@ -54,6 +57,17 @@ qemu/stamp-check: qemu/stamp
 ## Explicitly adds the QEMU test cases to "make check"
 #check: qemu/stamp-check
 
+# Build sparse from source
+$(SPARSE): sparse/stamp
+	touch -c $@
+
+sparse/stamp: \
+		$(shell git -C sparse ls-files --recurse-submodules | grep -v ' ' | sed 's@^@sparse/@' | xargs readlink -e)
+	$(MAKE) -C $(dir $@) PREFIX=$(abspath $(dir $@)/install) install
+
+sparse/configue: \
+		$(shell git -C sparse ls-files --recurse-submodules | grep -v ' ' | sed 's@^@sparse/@' | xargs readlink -e) \
+
 # Builds generic Linux images, which are just based on our defconfig.
 kernel/%/arch/riscv/boot/Image: kernel/%/stamp
 	touch -c $@
@@ -61,8 +75,9 @@ kernel/%/arch/riscv/boot/Image: kernel/%/stamp
 kernel/%/stamp: \
 		kernel/%/.config \
 		toolchain/install.stamp \
-		$(shell git -C linux ls-files | sed 's@^@linux/@' | xargs readlink -e)
-	$(MAKE) -C linux/ O=$(abspath $(dir $@)) ARCH=riscv CROSS_COMPILE=riscv64-unknown-linux-gnu-
+		$(shell git -C linux ls-files | sed 's@^@linux/@' | xargs readlink -e) \
+		$(GCC) $(SPARSE)
+	$(MAKE) -C linux/ O=$(abspath $(dir $@)) ARCH=riscv CROSS_COMPILE=riscv64-unknown-linux-gnu- C=1 CF="-Wsparse-error"
 	date > $@
 
 kernel/rv64gc/%/.config: \
@@ -136,18 +151,18 @@ extmod/stamp: \
 		$(shell git -C linux ls-files | sed 's@^@linux/@' | xargs readlink -e)
 	$(MAKE) -C extmod/ ARCH=riscv CROSS_COMPILE=riscv64-unknown-linux-gnu- KDIR=$(abspath linux) O=$(abspath $(dir $<))
 
-#check: check/dt_check/log
+check: check/dt_check/report
 
-check/dt_check/stamp: \
+check/dt_check/log: \
 		$(GCC) \
 		$(shell git -C linux ls-files | sed 's@^@linux/@' | xargs readlink -e)
+	@rm -rf $(dir $@)
 	@mkdir -p $(dir $@)
 	$(MAKE) -C $(abspath linux) ARCH=riscv CROSS_COMPILE=riscv64-unknown-linux-gnu- O=$(abspath $(dir $@)) defconfig
-	$(MAKE) -C $(abspath linux) ARCH=riscv CROSS_COMPILE=riscv64-unknown-linux-gnu- O=$(abspath $(dir $@)) dt_check
-	date > $@
+	$(MAKE) -C $(abspath linux) ARCH=riscv CROSS_COMPILE=riscv64-unknown-linux-gnu- O=$(abspath $(dir $@)) dt_binding_check dtbs_check |& tee $@
 
-check/dt_check/log: check/dt_check/stamp
-	false
+check/dt_check/report: check/dt_check/log
+	cat $< | grep -v '^  ' | grep -v '^make' > $@
 
 # Explicitly adds some build-only kernel configs
 check: kernel/rv32gc/defconfig/stamp
