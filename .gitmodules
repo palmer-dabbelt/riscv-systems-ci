@@ -13,3 +13,6 @@
 [submodule "crosstool-ng"]
 	path = crosstool-ng
 	url = https://github.com/crosstool-ng/crosstool-ng
+[submodule "sparse"]
+	path = sparse
+	url = git://git.kernel.org/pub/scm/devel/sparse/sparse.git
