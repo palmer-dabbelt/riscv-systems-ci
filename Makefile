@@ -77,7 +77,7 @@ kernel/%/stamp: \
 		toolchain/install.stamp \
 		$(shell git -C linux ls-files | sed 's@^@linux/@' | xargs readlink -e) \
 		$(GCC) $(SPARSE)
-	$(MAKE) -C linux/ O=$(abspath $(dir $@)) ARCH=riscv CROSS_COMPILE=riscv64-unknown-linux-gnu- C=1 CF="-Wsparse-error"
+	$(MAKE) -C linux/ O=$(abspath $(dir $@)) ARCH=riscv CROSS_COMPILE=riscv64-unknown-linux-gnu- C=1 CF="-Wno-sparse-error"
 	date > $@
 
 kernel/rv64gc/%/.config: \
