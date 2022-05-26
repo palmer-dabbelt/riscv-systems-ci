@@ -185,18 +185,28 @@ userspace/%/stamp: userspace/%/.config
 	$(MAKE) -C buildroot O=$(abspath $(dir $@))
 	date > $@
 
-userspace/rv64gc/default/.config: \
+userspace/rv64gc/glibc/.config: \
 		$(shell git -C buildroot ls-files | sed 's@^@buildroot/@' | xargs readlink -e)
 	mkdir -p $(dir $@)
 	$(MAKE) -C buildroot/ O=$(abspath $(dir $@)) qemu_riscv64_virt_defconfig
 	echo "BR2_TARGET_ROOTFS_CPIO=y" >> $@
+	echo "BR2_TOOLCHAIN_BUILDROOT_GLIBC=y" >> $@
 	$(MAKE) -C buildroot/ O=$(abspath $(dir $@)) olddefconfig
 
-userspace/rv32gc/default/.config: \
+userspace/rv32gc/glibc/.config: \
 		$(shell git -C buildroot ls-files | sed 's@^@buildroot/@' | xargs readlink -e)
 	mkdir -p $(dir $@)
 	$(MAKE) -C buildroot/ O=$(abspath $(dir $@)) qemu_riscv32_virt_defconfig
 	echo "BR2_TARGET_ROOTFS_CPIO=y" >> $@
+	echo "BR2_TOOLCHAIN_BUILDROOT_GLIBC=y" >> $@
+	$(MAKE) -C buildroot/ O=$(abspath $(dir $@)) olddefconfig
+
+userspace/rv64gc/musl/.config: \
+		$(shell git -C buildroot ls-files | sed 's@^@buildroot/@' | xargs readlink -e)
+	mkdir -p $(dir $@)
+	$(MAKE) -C buildroot/ O=$(abspath $(dir $@)) qemu_riscv64_virt_defconfig
+	echo "BR2_TARGET_ROOTFS_CPIO=y" >> $@
+	echo "BR2_TOOLCHAIN_BUILDROOT_MUSL=y" >> $@
 	$(MAKE) -C buildroot/ O=$(abspath $(dir $@)) olddefconfig
 
 # Runs tests in QEMU, both in 32-bit mode and 64-bit mode.
@@ -242,25 +252,26 @@ target/qemu-rv64gc-virt-smp8/initrd/%: userspace/rv64gc/%/images/rootfs.cpio
 
 # Just halts the target.
 define mktest =
-TESTS += $1-$2
+TESTS += $1-$2-$3
 
-check/%/$1-$2/initrd: target/%/initrd/default
+check/%/$1-$2-$3/initrd: target/%/initrd/$3
 	mkdir -p $$(dir $$@)
 	cp $$< $$@
 
-check/%/$1-$2/kernel: target/%/kernel/$2
+check/%/$1-$2-$3/kernel: target/%/kernel/$2
 	mkdir -p $$(dir $$@)
 	cp $$< $$@
 
-check/%/$1-$2/stdin: tests/$1
+check/%/$1-$2-$3/stdin: tests/$1
 	mkdir -p $$(dir $$@)
 	cp $$< $$@
 	touch -c $$@
 endef
 
-$(eval $(call mktest,halt,defconfig))
-$(eval $(call mktest,cpuinfo,defconfig))
-$(foreach config,$(patsubst configs/linux/%,%,$(wildcard configs/linux/*)), $(eval $(call mktest,halt,$(config))))
+$(eval $(call mktest,halt,defconfig,default))
+$(eval $(call mktest,cpuinfo,defconfig,default))
+$(foreach config,$(patsubst configs/linux/%,%,$(wildcard configs/linux/*)), $(eval $(call mktest,halt,$(config),glibc)))
+$(eval $(call mktest,halt,defconfig,musl))
 
 # Expands out the total list of tests
 define expand =
