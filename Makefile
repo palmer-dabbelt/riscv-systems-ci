@@ -176,6 +176,7 @@ check: kernel/rv64gc/allyesconfig/stamp
 check: kernel/rv64gc/nommu_k210_defconfig/stamp
 check: kernel/rv64gc/nommu_k210_sdcard_defconfig/stamp
 check: kernel/rv64gc/nommu_virt_defconfig/stamp
+#check: kernel/rv64gc/xip/stamp
 
 # Builds generic buildroot images, which are also just based on our defconfig.
 userspace/%/images/rootfs.cpio: userspace/%/stamp
