@@ -210,6 +210,14 @@ userspace/rv64gc/musl/.config: \
 	echo "BR2_TOOLCHAIN_BUILDROOT_MUSL=y" >> $@
 	$(MAKE) -C buildroot/ O=$(abspath $(dir $@)) olddefconfig
 
+userspace/rv32gc/musl/.config: \
+		$(shell git -C buildroot ls-files | sed 's@^@buildroot/@' | xargs readlink -e)
+	mkdir -p $(dir $@)
+	$(MAKE) -C buildroot/ O=$(abspath $(dir $@)) qemu_riscv32_virt_defconfig
+	echo "BR2_TARGET_ROOTFS_CPIO=y" >> $@
+	echo "BR2_TOOLCHAIN_BUILDROOT_MUSL=y" >> $@
+	$(MAKE) -C buildroot/ O=$(abspath $(dir $@)) olddefconfig
+
 # Runs tests in QEMU, both in 32-bit mode and 64-bit mode.
 TARGETS += qemu-rv64gc-virt-smp4
 target/qemu-rv64gc-virt-smp4/run: tools/make-qemu-wrapper $(QEMU_RISCV64)
@@ -269,8 +277,8 @@ check/%/$1-$2-$3/stdin: tests/$1
 	touch -c $$@
 endef
 
-$(eval $(call mktest,halt,defconfig,default))
-$(eval $(call mktest,cpuinfo,defconfig,default))
+$(eval $(call mktest,halt,defconfig,glibc))
+$(eval $(call mktest,cpuinfo,defconfig,glibc))
 $(foreach config,$(patsubst configs/linux/%,%,$(wildcard configs/linux/*)), $(eval $(call mktest,halt,$(config),glibc)))
 $(eval $(call mktest,halt,defconfig,musl))
 
