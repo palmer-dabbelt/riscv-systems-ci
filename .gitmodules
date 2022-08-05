@@ -9,7 +9,7 @@
 	url = https://git.buildroot.net/buildroot
 [submodule "riscv-gnu-toolchain"]
 	path = riscv-gnu-toolchain
-	url = https://github.com/riscv/riscv-gnu-toolchain.git
+	url = https://github.com/palmer-dabbelt/riscv-gnu-toolchain.git
 [submodule "crosstool-ng"]
 	path = crosstool-ng
 	url = https://github.com/crosstool-ng/crosstool-ng
