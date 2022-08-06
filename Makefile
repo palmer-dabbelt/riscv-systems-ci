@@ -167,7 +167,9 @@ check/dt_check/log: \
 	@rm -rf $(dir $@)
 	@mkdir -p $(dir $@)
 	$(MAKE) -C $(abspath $(LINUX)) ARCH=riscv CROSS_COMPILE=riscv64-unknown-linux-gnu- O=$(abspath $(dir $@)) defconfig
-	$(MAKE) -C $(abspath $(LINUX)) ARCH=riscv CROSS_COMPILE=riscv64-unknown-linux-gnu- O=$(abspath $(dir $@)) dt_binding_check dtbs_check |& tee $@
+	- $(MAKE) -C $(abspath $(LINUX)) ARCH=riscv CROSS_COMPILE=riscv64-unknown-linux-gnu- O=$(abspath $(dir $@)) dt_binding_check |& tee $@
+	$(MAKE) -C $(abspath $(LINUX)) ARCH=riscv CROSS_COMPILE=riscv64-unknown-linux-gnu- O=$(abspath $(dir $@)) dtbs_check |& tee -a $@
+
 
 check/dt_check/report: check/dt_check/log
 	cat $< | grep -v '^  ' | grep -v '^make' > $@
