@@ -10,9 +10,6 @@
 [submodule "riscv-gnu-toolchain"]
 	path = riscv-gnu-toolchain
 	url = https://github.com/palmer-dabbelt/riscv-gnu-toolchain.git
-[submodule "crosstool-ng"]
-	path = crosstool-ng
-	url = https://github.com/crosstool-ng/crosstool-ng
 [submodule "sparse"]
 	path = sparse
 	url = https://git.kernel.org/pub/scm/linux/kernel/git/palmer/sparse.git
