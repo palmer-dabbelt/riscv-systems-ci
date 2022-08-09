@@ -27,6 +27,9 @@ export PATH
 # Builds GCC from the RISC-V integration repo
 $(GCC): toolchain/install.stamp
 
+.PHONY: toolchain
+toolchain: toolchain/install.stamp
+
 toolchain/install.stamp: toolchain/Makefile
 	$(MAKE) -C $(dir $<)
 	date > $@
@@ -282,9 +285,18 @@ $(eval $(call mktest,cpuinfo,defconfig,glibc))
 $(foreach config,$(patsubst configs/linux/%,%,$(wildcard configs/linux/*)), $(eval $(call mktest,halt,$(config),glibc)))
 $(eval $(call mktest,halt,defconfig,musl))
 
+.PHONY: userspace
+userspace:
+
+.PHONY: kernel
+kernel:
+
 # Expands out the total list of tests
 define expand =
 check: check/$1/$2/stdout
+userspace: check/$1/$2/initrd
+kernel: check/$1/$2/kernel
+
 check/$1/$2/stdout: target/$1/run check/$1/$2/kernel check/$1/$2/initrd check/$1/$2/stdin
 	$$< --output $$@ $$^
 
