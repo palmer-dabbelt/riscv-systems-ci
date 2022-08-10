@@ -19,11 +19,18 @@ check:
 clean:
 	tools/git-clean-recursive
 
-GCC = toolchain/install/bin/riscv64-unknown-linux-gcc
-SPARSE = sparse/install/bin/sparse
+GCC_DEFAULT := toolchain/install/bin/riscv64-unknown-linux-gnu-gcc
+GCC ?= $(GCC_DEFAULT)
+SPARSE ?= sparse/install/bin/sparse
 PATH := $(abspath $(dir $(GCC))):$(abspath $(dir $(SPARSE))):$(PATH)
+LINUX ?= linux
 export PATH
 
+ifneq ($(GCC),$(GCC_DEFAULT))
+toolchain/install.stamp:
+	mkdir -p $(dir $@)
+	date > $@
+else
 # Builds GCC from the RISC-V integration repo
 $(GCC): toolchain/install.stamp
 
@@ -37,6 +44,7 @@ toolchain/install.stamp: toolchain/Makefile
 toolchain/Makefile: riscv-gnu-toolchain/configure
 	mkdir -p $(dir $@)
 	env -C $(dir $@) $(abspath $<) --prefix="$(abspath $(dir $@)/install)" --enable-linux
+endif
 
 # Builds QEMU from git source.  There's been an attempt at detecting
 # dependencies here, but nothing serious.
@@ -78,71 +86,71 @@ kernel/%/arch/riscv/boot/Image: kernel/%/stamp
 kernel/%/stamp: \
 		kernel/%/.config \
 		toolchain/install.stamp \
-		$(shell git -C linux ls-files | sed 's@^@linux/@' | xargs readlink -e) \
+		$(shell git -C $(LINUX) ls-files | sed 's@^@$(LINUX)/@' | xargs readlink -e) \
 		$(GCC) $(SPARSE)
-	$(MAKE) -C linux/ O=$(abspath $(dir $@)) ARCH=riscv CROSS_COMPILE=riscv64-unknown-linux-gnu- C=1 CF="-Wno-sparse-error"
+	$(MAKE) -C $(LINUX)/ O=$(abspath $(dir $@)) ARCH=riscv CROSS_COMPILE=riscv64-unknown-linux-gnu- C=1 CF="-Wno-sparse-error"
 	date > $@
 
 kernel/rv64gc/%/.config: \
-		linux/arch/riscv/configs/% \
+		$(LINUX)/arch/riscv/configs/% \
 		toolchain/install.stamp \
-		$(shell git -C linux ls-files | sed 's@^@linux/@' | xargs readlink -e | grep Kconfig)
+		$(shell git -C $(LINUX) ls-files | sed 's@^@$(LINUX)/@' | xargs readlink -e | grep Kconfig)
 	mkdir -p $(dir $@)
 	rm -f $@
-	$(MAKE) -C linux/ O=$(abspath $(dir $@)) ARCH=riscv CROSS_COMPILE=riscv64-unknown-linux-gnu- $(notdir $<)
+	$(MAKE) -C $(LINUX)/ O=$(abspath $(dir $@)) ARCH=riscv CROSS_COMPILE=riscv64-unknown-linux-gnu- $(notdir $<)
 	touch -c $@
 
 kernel/rv32gc/%/.config: \
-		linux/arch/riscv/configs/rv32_% \
+		$(LINUX)/arch/riscv/configs/rv32_% \
 		toolchain/install.stamp \
-		$(shell git -C linux ls-files | sed 's@^@linux/@' | xargs readlink -e | grep Kconfig)
+		$(shell git -C $(LINUX) ls-files | sed 's@^@$(LINUX)/@' | xargs readlink -e | grep Kconfig)
 	mkdir -p $(dir $@)
 	rm -f $@
-	$(MAKE) -C linux/ O=$(abspath $(dir $@)) ARCH=riscv CROSS_COMPILE=riscv64-unknown-linux-gnu- $(notdir $<)
+	$(MAKE) -C $(LINUX)/ O=$(abspath $(dir $@)) ARCH=riscv CROSS_COMPILE=riscv64-unknown-linux-gnu- $(notdir $<)
 	touch -c $@
 
 kernel/rv64gc/%/.config: \
-		configs/linux/% \
-		linux/arch/riscv/configs/defconfig \
+		configs/$(LINUX)/% \
+		$(LINUX)/arch/riscv/configs/defconfig \
 		toolchain/install.stamp \
-		$(shell git -C linux ls-files | sed 's@^@linux/@' | xargs readlink -e | grep Kconfig)
+		$(shell git -C $(LINUX) ls-files | sed 's@^@$(LINUX)/@' | xargs readlink -e | grep Kconfig)
 	mkdir -p $(dir $@)
 	rm -f $@
-	$(MAKE) -C linux/ O=$(abspath $(dir $@)) ARCH=riscv CROSS_COMPILE=riscv64-unknown-linux-gnu- defconfig
+	$(MAKE) -C $(LINUX)/ O=$(abspath $(dir $@)) ARCH=riscv CROSS_COMPILE=riscv64-unknown-linux-gnu- defconfig
 	cat $< >> $@
-	-$(MAKE) -C linux/ O=$(abspath $(dir $@)) ARCH=riscv CROSS_COMPILE=riscv64-unknown-linux-gnu- olddefconfig
+	-$(MAKE) -C $(LINUX)/ O=$(abspath $(dir $@)) ARCH=riscv CROSS_COMPILE=riscv64-unknown-linux-gnu- olddefconfig
 	tools/checkconfig $< $@ || mv $@ $@.broken
-	-$(MAKE) -C linux/ O=$(abspath $(dir $@)) ARCH=riscv CROSS_COMPILE=riscv64-unknown-linux-gnu- savedefconfig
+	-$(MAKE) -C $(LINUX)/ O=$(abspath $(dir $@)) ARCH=riscv CROSS_COMPILE=riscv64-unknown-linux-gnu- savedefconfig
 	touch -c $@
 
 kernel/rv32gc/%/.config: \
-		configs/linux/% \
-		linux/arch/riscv/configs/defconfig \
+		configs/$(LINUX)/% \
+		$(LINUX)/arch/riscv/configs/defconfig \
 		toolchain/install.stamp \
-		$(shell git -C linux ls-files | sed 's@^@linux/@' | xargs readlink -e | grep Kconfig)
+		$(shell git -C $(LINUX) ls-files | sed 's@^@$(LINUX)/@' | xargs readlink -e | grep Kconfig)
 	mkdir -p $(dir $@)
 	rm -f $@
-	$(MAKE) -C linux/ O=$(abspath $(dir $@)) ARCH=riscv CROSS_COMPILE=riscv64-unknown-linux-gnu- rv32_defconfig
+	$(MAKE) -C $(LINUX)/ O=$(abspath $(dir $@)) ARCH=riscv CROSS_COMPILE=riscv64-unknown-linux-gnu- rv32_defconfig
 	cat $< >> $@
-	-$(MAKE) -C linux/ O=$(abspath $(dir $@)) ARCH=riscv CROSS_COMPILE=riscv64-unknown-linux-gnu- olddefconfig
+	-$(MAKE) -C $(LINUX)/ O=$(abspath $(dir $@)) ARCH=riscv CROSS_COMPILE=riscv64-unknown-linux-gnu- olddefconfig
 	tools/checkconfig $< $@ || mv $@ $@.broken
-	-$(MAKE) -C linux/ O=$(abspath $(dir $@)) ARCH=riscv CROSS_COMPILE=riscv64-unknown-linux-gnu- savedefconfig
+	-$(MAKE) -C $(LINUX)/ O=$(abspath $(dir $@)) ARCH=riscv CROSS_COMPILE=riscv64-unknown-linux-gnu- savedefconfig
 	touch -c $@
 
 kernel/rv64gc/all%config/.config: \
 		toolchain/install.stamp \
-		$(shell git -C linux ls-files | sed 's@^@linux/@' | xargs readlink -e | grep Kconfig)
+		$(shell git -C $(LINUX) ls-files | sed 's@^@$(LINUX)/@' | xargs readlink -e | grep Kconfig)
 	mkdir -p $(dir $@)
 	rm -f $@
-	$(MAKE) -C linux/ O=$(abspath $(dir $@)) ARCH=riscv CROSS_COMPILE=riscv64-unknown-linux-gnu- KCONFIG_ALLCONFIG=$(abspath linux/arch/riscv/configs/64-bit.config) $(word 3,$(subst /, ,$@))
+	$(MAKE) -C $(LINUX)/ O=$(abspath $(dir $@)) ARCH=riscv CROSS_COMPILE=riscv64-unknown-linux-gnu- KCONFIG_ALLCONFIG=$(abspath $(LINUX)/arch/riscv/configs/64-bit.config) $(word 3,$(subst /, ,$@))
 	touch -c $@
 
 kernel/rv32gc/all%config/.config: \
 		toolchain/install.stamp \
-		$(shell git -C linux ls-files | sed 's@^@linux/@' | xargs readlink -e | grep Kconfig)
+		$(shell git -C $(LINUX) ls-files | sed 's@^@$(LINUX)/@' | xargs readlink -e | grep Kconfig)
 	mkdir -p $(dir $@)
 	rm -f $@
-	$(MAKE) -C linux/ O=$(abspath $(dir $@)) ARCH=riscv CROSS_COMPILE=riscv64-unknown-linux-gnu- KCONFIG_ALLCONFIG=$(abspath linux/arch/riscv/configs/32-bit.config) $(word 3,$(subst /, ,$@))
+	$(MAKE) -C $(LINUX)/ O=$(abspath $(dir $@)) ARCH=riscv CROSS_COMPILE=riscv64-unknown-linux-gnu- KCONFIG_ALLCONFIG=$(abspath $(LINUX)/arch/riscv/configs/32-bit.config) $(word 3,$(subst /, ,$@))
 	touch -c $@
 
 #check: extmod/stamp
@@ -151,18 +159,20 @@ extmod/stamp: \
 		kernel/rv64gc/defconfig/.config \
 		toolchain/install.stamp \
 		$(GCC) \
-		$(shell git -C linux ls-files | sed 's@^@linux/@' | xargs readlink -e)
-	$(MAKE) -C extmod/ ARCH=riscv CROSS_COMPILE=riscv64-unknown-linux-gnu- KDIR=$(abspath linux) O=$(abspath $(dir $<))
+		$(shell git -C $(LINUX) ls-files | sed 's@^@$(LINUX)/@' | xargs readlink -e)
+	$(MAKE) -C extmod/ ARCH=riscv CROSS_COMPILE=riscv64-unknown-linux-gnu- KDIR=$(abspath $(LINUX)) O=$(abspath $(dir $<))
 
 check: check/dt_check/report
 
 check/dt_check/log: \
 		$(GCC) \
-		$(shell git -C linux ls-files | sed 's@^@linux/@' | xargs readlink -e)
+		$(shell git -C $(LINUX) ls-files | sed 's@^@$(LINUX)/@' | xargs readlink -e)
 	@rm -rf $(dir $@)
 	@mkdir -p $(dir $@)
-	$(MAKE) -C $(abspath linux) ARCH=riscv CROSS_COMPILE=riscv64-unknown-linux-gnu- O=$(abspath $(dir $@)) defconfig
-	$(MAKE) -C $(abspath linux) ARCH=riscv CROSS_COMPILE=riscv64-unknown-linux-gnu- O=$(abspath $(dir $@)) dt_binding_check dtbs_check |& tee $@
+	$(MAKE) -C $(abspath $(LINUX)) ARCH=riscv CROSS_COMPILE=riscv64-unknown-linux-gnu- O=$(abspath $(dir $@)) defconfig
+	- $(MAKE) -C $(abspath $(LINUX)) ARCH=riscv CROSS_COMPILE=riscv64-unknown-linux-gnu- O=$(abspath $(dir $@)) dt_binding_check |& tee $@
+	$(MAKE) -C $(abspath $(LINUX)) ARCH=riscv CROSS_COMPILE=riscv64-unknown-linux-gnu- O=$(abspath $(dir $@)) dtbs_check |& tee -a $@
+
 
 check/dt_check/report: check/dt_check/log
 	cat $< | grep -v '^  ' | grep -v '^make' > $@
