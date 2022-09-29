@@ -101,18 +101,29 @@ sparse/configue: \
 		$(shell git -C sparse ls-files --recurse-submodules | grep -v ' ' | sed 's@^@sparse/@' | xargs readlink -e) \
 
 # Builds generic Linux images, which are just based on our defconfig.
-kernel/%/arch/riscv/boot/Image: kernel/%/stamp
+kernel/%/gcc/arch/riscv/boot/Image: kernel/%/gcc/stamp
 	touch -c $@
 
-kernel/%/stamp: \
-		kernel/%/.config \
+kernel/%/llvm/arch/riscv/boot/Image: kernel/%/llvm/stamp
+	touch -c $@
+
+kernel/%/gcc/stamp: \
+		kernel/%/gcc/.config \
 		toolchain/install.stamp \
 		$(shell git -C $(LINUX) ls-files | sed 's@^@$(LINUX)/@' | xargs readlink -e) \
 		$(GCC) $(SPARSE)
 	$(MAKE) -C $(LINUX)/ O=$(abspath $(dir $@)) ARCH=riscv CROSS_COMPILE=riscv64-unknown-linux-gnu- C=1 CF="-Wno-sparse-error"
 	date > $@
 
-kernel/rv64gc/%/.config: \
+kernel/%/llvm/stamp: \
+		kernel/%/llvm/.config \
+		llvm/install/install.stamp \
+		$(shell git -C $(LINUX) ls-files | sed 's@^@$(LINUX)/@' | xargs readlink -e) \
+		$(LLVM) $(SPARSE)
+	$(MAKE) -C $(LINUX)/ O=$(abspath $(dir $@)) ARCH=riscv LLVM=1 C=1 CF="-Wno-sparse-error"
+	date > $@
+
+kernel/rv64gc/%/gcc/.config: \
 		$(LINUX)/arch/riscv/configs/% \
 		toolchain/install.stamp \
 		$(shell git -C $(LINUX) ls-files | sed 's@^@$(LINUX)/@' | xargs readlink -e | grep Kconfig)
@@ -121,7 +132,16 @@ kernel/rv64gc/%/.config: \
 	$(MAKE) -C $(LINUX)/ O=$(abspath $(dir $@)) ARCH=riscv CROSS_COMPILE=riscv64-unknown-linux-gnu- $(notdir $<)
 	touch -c $@
 
-kernel/rv32gc/%/.config: \
+kernel/rv64gc/%/llvm/.config: \
+		$(LINUX)/arch/riscv/configs/% \
+		llvm/install/install.stamp \
+		$(shell git -C $(LINUX) ls-files | sed 's@^@$(LINUX)/@' | xargs readlink -e | grep Kconfig)
+	mkdir -p $(dir $@)
+	rm -f $@
+	$(MAKE) -C $(LINUX)/ O=$(abspath $(dir $@)) ARCH=riscv LLVM=1 $(notdir $<)
+	touch -c $@
+
+kernel/rv32gc/%/gcc/.config: \
 		$(LINUX)/arch/riscv/configs/rv32_% \
 		toolchain/install.stamp \
 		$(shell git -C $(LINUX) ls-files | sed 's@^@$(LINUX)/@' | xargs readlink -e | grep Kconfig)
@@ -130,7 +150,16 @@ kernel/rv32gc/%/.config: \
 	$(MAKE) -C $(LINUX)/ O=$(abspath $(dir $@)) ARCH=riscv CROSS_COMPILE=riscv64-unknown-linux-gnu- $(notdir $<)
 	touch -c $@
 
-kernel/rv64gc/%/.config: \
+kernel/rv32gc/%/llvm/.config: \
+		$(LINUX)/arch/riscv/configs/rv32_% \
+		llvm/install/install.stamp \
+		$(shell git -C $(LINUX) ls-files | sed 's@^@$(LINUX)/@' | xargs readlink -e | grep Kconfig)
+	mkdir -p $(dir $@)
+	rm -f $@
+	$(MAKE) -C $(LINUX)/ O=$(abspath $(dir $@)) ARCH=riscv LLVM=1 $(notdir $<)
+	touch -c $@
+
+kernel/rv64gc/%/gcc/.config: \
 		configs/$(LINUX)/% \
 		$(LINUX)/arch/riscv/configs/defconfig \
 		toolchain/install.stamp \
@@ -144,7 +173,21 @@ kernel/rv64gc/%/.config: \
 	-$(MAKE) -C $(LINUX)/ O=$(abspath $(dir $@)) ARCH=riscv CROSS_COMPILE=riscv64-unknown-linux-gnu- savedefconfig
 	touch -c $@
 
-kernel/rv32gc/%/.config: \
+kernel/rv64gc/%/llvm/.config: \
+		configs/$(LINUX)/% \
+		$(LINUX)/arch/riscv/configs/defconfig \
+		llvm/install/install.stamp \
+		$(shell git -C $(LINUX) ls-files | sed 's@^@$(LINUX)/@' | xargs readlink -e | grep Kconfig)
+	mkdir -p $(dir $@)
+	rm -f $@
+	$(MAKE) -C $(LINUX)/ O=$(abspath $(dir $@)) ARCH=riscv LLVM=1 defconfig
+	cat $< >> $@
+	-$(MAKE) -C $(LINUX)/ O=$(abspath $(dir $@)) ARCH=riscv LLVM=1 olddefconfig
+	tools/checkconfig $< $@ || mv $@ $@.broken
+	-$(MAKE) -C $(LINUX)/ O=$(abspath $(dir $@)) ARCH=riscv LLVM=1 savedefconfig
+	touch -c $@
+
+kernel/rv32gc/%/gcc/.config: \
 		configs/$(LINUX)/% \
 		$(LINUX)/arch/riscv/configs/defconfig \
 		toolchain/install.stamp \
@@ -158,7 +201,21 @@ kernel/rv32gc/%/.config: \
 	-$(MAKE) -C $(LINUX)/ O=$(abspath $(dir $@)) ARCH=riscv CROSS_COMPILE=riscv64-unknown-linux-gnu- savedefconfig
 	touch -c $@
 
-kernel/rv64gc/all%config/.config: \
+kernel/rv32gc/%/llvm/.config: \
+		configs/$(LINUX)/% \
+		$(LINUX)/arch/riscv/configs/defconfig \
+		llvm/install/install.stamp \
+		$(shell git -C $(LINUX) ls-files | sed 's@^@$(LINUX)/@' | xargs readlink -e | grep Kconfig)
+	mkdir -p $(dir $@)
+	rm -f $@
+	$(MAKE) -C $(LINUX)/ O=$(abspath $(dir $@)) ARCH=riscv LLVM=1 rv32_defconfig
+	cat $< >> $@
+	-$(MAKE) -C $(LINUX)/ O=$(abspath $(dir $@)) ARCH=riscv LLVM=1 olddefconfig
+	tools/checkconfig $< $@ || mv $@ $@.broken
+	-$(MAKE) -C $(LINUX)/ O=$(abspath $(dir $@)) ARCH=riscv LLVM=1 savedefconfig
+	touch -c $@
+
+kernel/rv64gc/all%config/gcc/.config: \
 		toolchain/install.stamp \
 		$(shell git -C $(LINUX) ls-files | sed 's@^@$(LINUX)/@' | xargs readlink -e | grep Kconfig)
 	mkdir -p $(dir $@)
@@ -166,12 +223,28 @@ kernel/rv64gc/all%config/.config: \
 	$(MAKE) -C $(LINUX)/ O=$(abspath $(dir $@)) ARCH=riscv CROSS_COMPILE=riscv64-unknown-linux-gnu- KCONFIG_ALLCONFIG=$(abspath $(LINUX)/arch/riscv/configs/64-bit.config) $(word 3,$(subst /, ,$@))
 	touch -c $@
 
-kernel/rv32gc/all%config/.config: \
+kernel/rv64gc/all%config/llvm/.config: \
+		llvm/install/install.stamp \
+		$(shell git -C $(LINUX) ls-files | sed 's@^@$(LINUX)/@' | xargs readlink -e | grep Kconfig)
+	mkdir -p $(dir $@)
+	rm -f $@
+	$(MAKE) -C $(LINUX)/ O=$(abspath $(dir $@)) ARCH=riscv KCONFIG_ALLCONFIG=$(abspath $(LINUX)/arch/riscv/configs/64-bit.config) LLVM=1 $(word 3,$(subst /, ,$@))
+	touch -c $@
+
+kernel/rv32gc/all%config/gcc/.config: \
 		toolchain/install.stamp \
 		$(shell git -C $(LINUX) ls-files | sed 's@^@$(LINUX)/@' | xargs readlink -e | grep Kconfig)
 	mkdir -p $(dir $@)
 	rm -f $@
 	$(MAKE) -C $(LINUX)/ O=$(abspath $(dir $@)) ARCH=riscv CROSS_COMPILE=riscv64-unknown-linux-gnu- KCONFIG_ALLCONFIG=$(abspath $(LINUX)/arch/riscv/configs/32-bit.config) $(word 3,$(subst /, ,$@))
+	touch -c $@
+
+kernel/rv32gc/all%config/llvm/.config: \
+		llvm/install/install.stamp \
+		$(shell git -C $(LINUX) ls-files | sed 's@^@$(LINUX)/@' | xargs readlink -e | grep Kconfig)
+	mkdir -p $(dir $@)
+	rm -f $@
+	$(MAKE) -C $(LINUX)/ O=$(abspath $(dir $@)) ARCH=riscv KCONFIG_ALLCONFIG=$(abspath $(LINUX)/arch/riscv/configs/32-bit.config) LLVM=1 $(word 3,$(subst /, ,$@))
 	touch -c $@
 
 #check: extmod/stamp
@@ -199,17 +272,26 @@ check/dt_check/report: check/dt_check/log
 	cat $< | grep -v '^  ' | grep -v '^make' > $@
 
 # Explicitly adds some build-only kernel configs
-check: kernel/rv32gc/defconfig/stamp
-check: kernel/rv32gc/allnoconfig/stamp
-check: kernel/rv32gc/allmodconfig/stamp
-check: kernel/rv32gc/allyesconfig/stamp
-check: kernel/rv64gc/defconfig/stamp
-check: kernel/rv64gc/allnoconfig/stamp
-check: kernel/rv64gc/allmodconfig/stamp
-check: kernel/rv64gc/allyesconfig/stamp
-check: kernel/rv64gc/nommu_k210_defconfig/stamp
-check: kernel/rv64gc/nommu_k210_sdcard_defconfig/stamp
-check: kernel/rv64gc/nommu_virt_defconfig/stamp
+check: kernel/rv32gc/defconfig/gcc/stamp
+check: kernel/rv32gc/allnoconfig/gcc/stamp
+check: kernel/rv32gc/allmodconfig/gcc/stamp
+check: kernel/rv32gc/allyesconfig/gcc/stamp
+check: kernel/rv64gc/defconfig/gcc/stamp
+check: kernel/rv64gc/allnoconfig/gcc/stamp
+check: kernel/rv64gc/allmodconfig/gcc/stamp
+check: kernel/rv64gc/allyesconfig/gcc/stamp
+check: kernel/rv64gc/nommu_k210_defconfig/gcc/stamp
+check: kernel/rv64gc/nommu_k210_sdcard_defconfig/gcc/stamp
+check: kernel/rv64gc/nommu_virt_defconfig/gcc/stamp
+check: kernel/rv32gc/defconfig/llvm/stamp
+check: kernel/rv32gc/allnoconfig/llvm/stamp
+check: kernel/rv64gc/defconfig/llvm/stamp
+check: kernel/rv64gc/allnoconfig/llvm/stamp
+check: kernel/rv64gc/allmodconfig/llvm/stamp
+check: kernel/rv64gc/allyesconfig/llvm/stamp
+check: kernel/rv64gc/nommu_k210_defconfig/llvm/stamp
+check: kernel/rv64gc/nommu_k210_sdcard_defconfig/llvm/stamp
+check: kernel/rv64gc/nommu_virt_defconfig/llvm/stamp
 #check: kernel/rv64gc/xip/stamp
 
 # Builds generic buildroot images, which are also just based on our defconfig.
@@ -258,7 +340,11 @@ target/qemu-rv64gc-virt-smp4/run: tools/make-qemu-wrapper $(QEMU_RISCV64)
 	mkdir -p $(dir $@)
 	$< --output "$@" --machine virt --memory 8G --smp 4 --isa rv64 --qemu $(QEMU_RISCV64)
 
-target/qemu-rv64gc-virt-smp4/kernel/%: kernel/rv64gc/%/arch/riscv/boot/Image
+target/qemu-rv64gc-virt-smp4/kernel/gcc/%: kernel/rv64gc/%/gcc/arch/riscv/boot/Image
+	mkdir -p $(dir $@)
+	cp $< $@
+
+target/qemu-rv64gc-virt-smp4/kernel/llvm/%: kernel/rv64gc/%/llvm/arch/riscv/boot/Image
 	mkdir -p $(dir $@)
 	cp $< $@
 
@@ -271,7 +357,11 @@ target/qemu-rv32gc-virt-smp4/run: tools/make-qemu-wrapper $(QEMU_RISCV32)
 	mkdir -p $(dir $@)
 	$< --output "$@" --machine virt --memory 1G --smp 4 --isa rv32 --qemu $(QEMU_RISCV32)
 
-target/qemu-rv32gc-virt-smp4/kernel/%: kernel/rv32gc/%/arch/riscv/boot/Image
+target/qemu-rv32gc-virt-smp4/kernel/gcc/%: kernel/rv32gc/%/gcc/arch/riscv/boot/Image
+	mkdir -p $(dir $@)
+	cp $< $@
+
+target/qemu-rv32gc-virt-smp4/kernel/llvm/%: kernel/rv32gc/%/llvm/arch/riscv/boot/Image
 	mkdir -p $(dir $@)
 	cp $< $@
 
@@ -284,7 +374,11 @@ target/qemu-rv64gc-virt-smp8/run: tools/make-qemu-wrapper $(QEMU_RISCV64)
 	mkdir -p $(dir $@)
 	$< --output "$@" --machine virt --memory 8G --smp 8 --isa rv64 --qemu $(QEMU_RISCV64)
 
-target/qemu-rv64gc-virt-smp8/kernel/%: kernel/rv64gc/%/arch/riscv/boot/Image
+target/qemu-rv64gc-virt-smp8/kernel/gcc/%: kernel/rv64gc/%/gcc/arch/riscv/boot/Image
+	mkdir -p $(dir $@)
+	cp $< $@
+
+target/qemu-rv64gc-virt-smp8/kernel/llvm/%: kernel/rv64gc/%/llvm/arch/riscv/boot/Image
 	mkdir -p $(dir $@)
 	cp $< $@
 
@@ -301,7 +395,11 @@ check/%/$1-$2-$3/initrd: target/%/initrd/$3
 	mkdir -p $$(dir $$@)
 	cp $$< $$@
 
-check/%/$1-$2-$3/kernel: target/%/kernel/$2
+check/%/$1-$2-$3/kernel-gcc: target/%/kernel/gcc/$2
+	mkdir -p $$(dir $$@)
+	cp $$< $$@
+
+check/%/$1-$2-$3/kernel-llvm: target/%/kernel/llvm/$2
 	mkdir -p $$(dir $$@)
 	cp $$< $$@
 
@@ -324,14 +422,14 @@ kernel:
 
 # Expands out the total list of tests
 define expand =
-check: check/$1/$2/stdout
+check: check/$1/$2/stdout-gcc check/$1/$2/stdout-llvm
 userspace: check/$1/$2/initrd
-kernel: check/$1/$2/kernel
+kernel: check/$1/$2/kernel-gcc check/$1/$2/kernel-llvm
 
-check/$1/$2/stdout: target/$1/run check/$1/$2/kernel check/$1/$2/initrd check/$1/$2/stdin
+check/$1/$2/stdout-%: target/$1/run check/$1/$2/kernel-% check/$1/$2/initrd check/$1/$2/stdin
 	$$< --output $$@ $$^
 
-check/$1/$2/log: check/$1/$2/stdout check/$1/$2/gold
+check/$1/$2/%/log-%: check/$1/$2/%/stdout-% check/$1/$2/gold
 	tools/check-log --output $$@ $$^
 endef
 
