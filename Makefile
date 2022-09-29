@@ -21,8 +21,10 @@ clean:
 
 GCC_DEFAULT := toolchain/install/bin/riscv64-unknown-linux-gnu-gcc
 GCC ?= $(GCC_DEFAULT)
+LLVM_DEFAULT := llvm/install/bin/
+LLVM ?= $(LLVM_DEFAULT)
 SPARSE ?= sparse/install/bin/sparse
-PATH := $(abspath $(dir $(GCC))):$(abspath $(dir $(SPARSE))):$(PATH)
+PATH := $(abspath $(LLVM)):$(abspath $(dir $(GCC))):$(abspath $(dir $(SPARSE))):$(PATH)
 LINUX ?= linux
 export PATH
 
@@ -44,6 +46,25 @@ toolchain/install.stamp: toolchain/Makefile
 toolchain/Makefile: riscv-gnu-toolchain/configure
 	mkdir -p $(dir $@)
 	env -C $(dir $@) $(abspath $<) --prefix="$(abspath $(dir $@)/install)" --enable-linux
+endif
+
+ifeq ($(LLVM),$(LLVM_DEFAULT))
+$(LLVM): llvm/install/install.stamp
+
+.PHONY: llvm
+llvm: llvm/install/install.stamp
+
+llvm/install/install.stamp: llvm/build/build.ninja
+	ninja -C $(dir $<) install
+	date > $@
+
+llvm/build/build.ninja: llvm-project/llvm/CMakeLists.txt
+	mkdir -p $(dir $@)
+	cmake -B $(dir $@) -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX="$(abspath $(dir $@)/../install)" -DLLVM_ENABLE_PROJECTS="clang;lld" -G Ninja -S $(abspath $(dir $<))
+else
+llvm/install/install.stamp:
+	mkdir -p $(dir $@)
+	date > $@
 endif
 
 # Builds QEMU from git source.  There's been an attempt at detecting

@@ -13,3 +13,7 @@
 [submodule "sparse"]
 	path = sparse
 	url = https://git.kernel.org/pub/scm/linux/kernel/git/palmer/sparse.git
+[submodule "llvm-project"]
+	path = llvm-project
+	url = https://github.com/llvm/llvm-project
+	branch = release/15.x
