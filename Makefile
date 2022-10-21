@@ -43,7 +43,15 @@ toolchain/install.stamp: toolchain/Makefile
 
 toolchain/Makefile: riscv-gnu-toolchain/configure
 	mkdir -p $(dir $@)
-	env -C $(dir $@) $(abspath $<) --prefix="$(abspath $(dir $@)/install)" --enable-linux
+	env -C $(dir $@) $(abspath $<) --prefix="$(abspath $(dir $@)/install)" --enable-linux --enable-multilib
+
+toolchain/check.log: toolchain/install.stamp
+	$(MAKE) -C $(dir $<) check |& tee $@
+	touch -c $@
+
+toolchain/report: toolchain/check.log
+	$(MAKE) -C $(dir $<) report |& tee $@
+	touch -c $@
 endif
 
 # Builds QEMU from git source.  There's been an attempt at detecting
