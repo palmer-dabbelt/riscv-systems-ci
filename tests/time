@@ -1,0 +1,4 @@
+root
+time sleep 10s
+time md5sum /bin/busybox
+halt

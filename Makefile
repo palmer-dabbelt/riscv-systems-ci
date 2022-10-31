@@ -300,6 +300,7 @@ endef
 
 $(eval $(call mktest,halt,defconfig,glibc))
 $(eval $(call mktest,cpuinfo,defconfig,glibc))
+$(eval $(call mktest,time,defconfig,glibc))
 $(foreach config,$(patsubst configs/linux/%,%,$(wildcard configs/linux/*)), $(eval $(call mktest,halt,$(config),glibc)))
 $(eval $(call mktest,halt,defconfig,musl))
 
