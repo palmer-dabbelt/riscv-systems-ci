@@ -1,6 +1,6 @@
 #!/bin/bash
 
-find check/ -name "stdout" | while read f
+find check/ -name "stdout-*" | while read f
 do
     echo "$f"
     grep BUG "$f" && exit 1
