@@ -40,7 +40,8 @@ $(GCC): toolchain/install.stamp
 toolchain: toolchain/install.stamp
 
 toolchain/install.stamp: toolchain/Makefile
-	$(MAKE) -C $(dir $<)
+	mkdir -p $(dir $@)
+	$(MAKE) -C $(dir $<) |& tee toolchain/build.log
 	date > $@
 
 toolchain/Makefile: riscv-gnu-toolchain/configure
@@ -51,7 +52,7 @@ toolchain/check.log: toolchain/install.stamp
 	$(MAKE) -C $(dir $<) check |& tee $@
 	touch -c $@
 
-toolchain/report: toolchain/check.log
+toolchain/report: toolchain/check.log $(wildcard riscv-gnu-toolchain/test/allowlist/gcc/*)
 	$(MAKE) -C $(dir $<) report |& tee $@
 	touch -c $@
 endif
