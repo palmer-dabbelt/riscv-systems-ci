@@ -395,6 +395,40 @@ target/qemu-rv64gc-virt-smp8/initrd/%: userspace/rv64gc/%/images/rootfs.cpio
 	mkdir -p $(dir $@)
 	cp $< $@
 
+TARGETS += qemu-rv64gczbb-virt-smp4
+target/qemu-rv64gczbb-virt-smp4/run: tools/make-qemu-wrapper $(QEMU_RISCV64)
+	mkdir -p $(dir $@)
+	$< --output "$@" --machine virt --memory 8G --smp 4 --isa rv64,zbb=on --qemu $(QEMU_RISCV64)
+
+target/qemu-rv64gczbb-virt-smp4/kernel/gcc/%: kernel/rv64gc/%/gcc/arch/riscv/boot/Image
+	mkdir -p $(dir $@)
+	cp $< $@
+
+target/qemu-rv64gczbb-virt-smp4/kernel/llvm/%: kernel/rv64gc/%/llvm/arch/riscv/boot/Image
+	mkdir -p $(dir $@)
+	cp $< $@
+
+target/qemu-rv64gczbb-virt-smp4/initrd/%: userspace/rv64gc/%/images/rootfs.cpio
+	mkdir -p $(dir $@)
+	cp $< $@
+
+TARGETS += qemu-rv32gczbb-virt-smp4
+target/qemu-rv32gczbb-virt-smp4/run: tools/make-qemu-wrapper $(QEMU_RISCV32)
+	mkdir -p $(dir $@)
+	$< --output "$@" --machine virt --memory 1G --smp 4 --isa rv32,zbb=on --qemu $(QEMU_RISCV32)
+
+target/qemu-rv32gczbb-virt-smp4/kernel/gcc/%: kernel/rv32gc/%/gcc/arch/riscv/boot/Image
+	mkdir -p $(dir $@)
+	cp $< $@
+
+target/qemu-rv32gczbb-virt-smp4/kernel/llvm/%: kernel/rv32gc/%/llvm/arch/riscv/boot/Image
+	mkdir -p $(dir $@)
+	cp $< $@
+
+target/qemu-rv32gczbb-virt-smp4/initrd/%: userspace/rv32gc/%/images/rootfs.cpio
+	mkdir -p $(dir $@)
+	cp $< $@
+
 
 # Just halts the target.
 define mktest =
