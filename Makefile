@@ -168,6 +168,24 @@ kernel/rv32gc/%/llvm/.config: \
 	$(MAKE) -C $(LINUX)/ O=$(abspath $(dir $@)) ARCH=riscv LLVM=1 $(notdir $<)
 	touch -c $@
 
+kernel/rv32gc/%/gcc/.config: \
+		$(LINUX)/arch/riscv/configs/% \
+		toolchain/install.stamp \
+		$(shell git -C $(LINUX) ls-files | sed 's@^@$(LINUX)/@' | xargs readlink -e | grep Kconfig)
+	mkdir -p $(dir $@)
+	rm -f $@
+	$(MAKE) -C $(LINUX)/ O=$(abspath $(dir $@)) ARCH=riscv CROSS_COMPILE=riscv64-unknown-linux-gnu- rv32_$(notdir $<)
+	touch -c $@
+
+kernel/rv32gc/%/llvm/.config: \
+		$(LINUX)/arch/riscv/configs/% \
+		llvm/install/install.stamp \
+		$(shell git -C $(LINUX) ls-files | sed 's@^@$(LINUX)/@' | xargs readlink -e | grep Kconfig)
+	mkdir -p $(dir $@)
+	rm -f $@
+	$(MAKE) -C $(LINUX)/ O=$(abspath $(dir $@)) ARCH=riscv LLVM=1 rv32_$(notdir $<)
+	touch -c $@
+
 kernel/rv64gc/%/gcc/.config: \
 		configs/$(LINUX)/% \
 		$(LINUX)/arch/riscv/configs/defconfig \
@@ -292,6 +310,7 @@ check: kernel/rv64gc/allyesconfig/gcc/stamp
 check: kernel/rv64gc/nommu_k210_defconfig/gcc/stamp
 check: kernel/rv64gc/nommu_k210_sdcard_defconfig/gcc/stamp
 check: kernel/rv64gc/nommu_virt_defconfig/gcc/stamp
+check: kernel/rv32gc/nommu_virt_defconfig/gcc/stamp
 check: kernel/rv32gc/defconfig/llvm/stamp
 check: kernel/rv32gc/allnoconfig/llvm/stamp
 check: kernel/rv64gc/defconfig/llvm/stamp
