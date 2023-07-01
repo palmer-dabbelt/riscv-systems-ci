@@ -366,7 +366,7 @@ userspace/rv32gc/musl/.config: \
 TARGETS += qemu-rv64gc-virt-smp4
 target/qemu-rv64gc-virt-smp4/run: tools/make-qemu-wrapper $(QEMU_RISCV64)
 	mkdir -p $(dir $@)
-	$< --output "$@" --machine virt --memory 8G --smp 4 --isa rv64 --qemu $(QEMU_RISCV64)
+	$< --output "$@" --machine virt --memory 8G --smp 4 --isa rv64,zbb=off --qemu $(QEMU_RISCV64)
 
 target/qemu-rv64gc-virt-smp4/kernel/gcc/%: kernel/rv64gc/%/gcc/arch/riscv/boot/Image
 	mkdir -p $(dir $@)
@@ -383,7 +383,7 @@ target/qemu-rv64gc-virt-smp4/initrd/%: userspace/rv64gc/%/images/rootfs.cpio
 TARGETS += qemu-rv32gc-virt-smp4
 target/qemu-rv32gc-virt-smp4/run: tools/make-qemu-wrapper $(QEMU_RISCV32)
 	mkdir -p $(dir $@)
-	$< --output "$@" --machine virt --memory 1G --smp 4 --isa rv32 --qemu $(QEMU_RISCV32)
+	$< --output "$@" --machine virt --memory 1G --smp 4 --isa rv32,zbb=off --qemu $(QEMU_RISCV32)
 
 target/qemu-rv32gc-virt-smp4/kernel/gcc/%: kernel/rv32gc/%/gcc/arch/riscv/boot/Image
 	mkdir -p $(dir $@)
@@ -400,7 +400,7 @@ target/qemu-rv32gc-virt-smp4/initrd/%: userspace/rv32gc/%/images/rootfs.cpio
 TARGETS += qemu-rv64gc-virt-smp8
 target/qemu-rv64gc-virt-smp8/run: tools/make-qemu-wrapper $(QEMU_RISCV64)
 	mkdir -p $(dir $@)
-	$< --output "$@" --machine virt --memory 8G --smp 8 --isa rv64 --qemu $(QEMU_RISCV64)
+	$< --output "$@" --machine virt --memory 8G --smp 8 --isa rv64,zbb=off --qemu $(QEMU_RISCV64)
 
 target/qemu-rv64gc-virt-smp8/kernel/gcc/%: kernel/rv64gc/%/gcc/arch/riscv/boot/Image
 	mkdir -p $(dir $@)
