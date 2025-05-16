@@ -474,8 +474,13 @@ endef
 $(eval $(call mktest,halt,defconfig,glibc))
 $(eval $(call mktest,cpuinfo,defconfig,glibc))
 $(eval $(call mktest,time,defconfig,glibc))
+$(eval $(call mktest,date,defconfig,glibc))
+$(eval $(call mktest,hwclock,defconfig,glibc))
 $(foreach config,$(patsubst configs/linux/%,%,$(wildcard configs/linux/*)), $(eval $(call mktest,halt,$(config),glibc)))
 $(eval $(call mktest,halt,defconfig,musl))
+$(eval $(call mktest,time,defconfig,musl))
+$(eval $(call mktest,date,defconfig,musl))
+$(eval $(call mktest,hwclock,defconfig,musl))
 
 .PHONY: userspace
 userspace:
