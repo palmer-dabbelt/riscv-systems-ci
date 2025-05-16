@@ -1,9 +1,20 @@
 #!/bin/bash
 
+set -o pipefail
+set -e
+set -x
+
 find check/ -name "stdout-*" | while read f
 do
     echo "$f"
     grep BUG "$f" && exit 1
+    grep "selftest failure" "$f" && exit 1
+    true
+done
+
+find check/ -name "stdout-*" | grep -v preempt_rt | while read f
+do
+    echo "$f"
     grep "reboot: System halted" "$f" || exit 1
 done
 

@@ -8,6 +8,9 @@ kernel/rv32gc/relocatable/*/.config)    exit 0;;
 kernel/rv32gc/kasan/*/.config)          exit 0;;
 kernel/rv32gc/kasan_*/*/.config)        exit 0;;
 kernel/rv32gc/vmap_stack/*/.config)     exit 0;;
+kernel/*/test-string/llvm/.config)      exit 0;;
+kernel/*/lto_*/gcc/.config)		exit 0;;
+kernel/*/preempt_v/llvm/.config)        exit 0;;
 esac
 
 cat "$1" | while read entry

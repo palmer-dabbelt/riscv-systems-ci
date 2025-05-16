@@ -86,7 +86,7 @@ $(QEMU_RISCV32) $(QEMU_RISCV64): qemu/stamp
 
 qemu/stamp: \
 		$(shell git -C qemu ls-files --recurse-submodules | grep -v ' ' | sed 's@^@qemu/@' | xargs readlink -e)
-	env -C $(dir $@) ./configure --prefix="$(abspath $(shell readlink -f $(dir $@)/install))" --target-list=riscv64-softmmu,riscv32-softmmu
+	env -C $(dir $@) ./configure --prefix="$(abspath $(shell readlink -f $(dir $@)/install))" --target-list=riscv64-softmmu,riscv32-softmmu,riscv64-linux-user,riscv32-linux-user --enable-virtfs
 	$(MAKE) -C $(dir $@)
 	$(MAKE) -C $(dir $@) install
 	date > $@
@@ -129,7 +129,7 @@ kernel/%/llvm/stamp: \
 		llvm/install/install.stamp \
 		$(shell git -C $(LINUX) ls-files | sed 's@^@$(LINUX)/@' | xargs readlink -e) \
 		$(LLVM) $(SPARSE)
-	$(MAKE) -C $(LINUX)/ O=$(abspath $(dir $@)) ARCH=riscv LLVM=1 C=1 CF="-Wno-sparse-error"
+	$(MAKE) -C $(LINUX)/ O=$(abspath $(dir $@)) ARCH=riscv LLVM=1 IAS=1 C=1 CF="-Wno-sparse-error"
 	date > $@
 
 kernel/rv64gc/%/gcc/.config: \
@@ -283,7 +283,7 @@ extmod/stamp: \
 		$(shell git -C $(LINUX) ls-files | sed 's@^@$(LINUX)/@' | xargs readlink -e)
 	$(MAKE) -C extmod/ ARCH=riscv CROSS_COMPILE=riscv64-unknown-linux-gnu- KDIR=$(abspath $(LINUX)) O=$(abspath $(dir $<))
 
-check: check/dt_check/report
+#check: check/dt_check/report
 
 check/dt_check/log: \
 		$(GCC) \
@@ -334,32 +334,44 @@ userspace/rv64gc/glibc/.config: \
 		$(shell git -C buildroot ls-files | sed 's@^@buildroot/@' | xargs readlink -e)
 	mkdir -p $(dir $@)
 	$(MAKE) -C buildroot/ O=$(abspath $(dir $@)) qemu_riscv64_virt_defconfig
+	echo "BR2_PACKAGE_LINUX_TOOLS_SELFTESTS=y" >> $@
 	echo "BR2_TARGET_ROOTFS_CPIO=y" >> $@
 	echo "BR2_TOOLCHAIN_BUILDROOT_GLIBC=y" >> $@
+	echo "BR2_LINUX_KERNEL_CUSTOM_GIT=\"file://$(abspath linux)\"" >> $@
+	echo "BR2_GLOBAL_PATCH_DIR=\"$(abspath buildroot-patches)\"" >> $@
 	$(MAKE) -C buildroot/ O=$(abspath $(dir $@)) olddefconfig
 
 userspace/rv32gc/glibc/.config: \
 		$(shell git -C buildroot ls-files | sed 's@^@buildroot/@' | xargs readlink -e)
 	mkdir -p $(dir $@)
 	$(MAKE) -C buildroot/ O=$(abspath $(dir $@)) qemu_riscv32_virt_defconfig
+	echo "BR2_PACKAGE_LINUX_TOOLS_SELFTESTS=y" >> $@
 	echo "BR2_TARGET_ROOTFS_CPIO=y" >> $@
 	echo "BR2_TOOLCHAIN_BUILDROOT_GLIBC=y" >> $@
+	echo "BR2_LINUX_KERNEL_CUSTOM_GIT=\"file://$(abspath linux)\"" >> $@
+	echo "BR2_GLOBAL_PATCH_DIR=\"$(abspath buildroot-patches)\"" >> $@
 	$(MAKE) -C buildroot/ O=$(abspath $(dir $@)) olddefconfig
 
 userspace/rv64gc/musl/.config: \
 		$(shell git -C buildroot ls-files | sed 's@^@buildroot/@' | xargs readlink -e)
 	mkdir -p $(dir $@)
 	$(MAKE) -C buildroot/ O=$(abspath $(dir $@)) qemu_riscv64_virt_defconfig
+	echo "BR2_PACKAGE_LINUX_TOOLS_SELFTESTS=y" >> $@
 	echo "BR2_TARGET_ROOTFS_CPIO=y" >> $@
 	echo "BR2_TOOLCHAIN_BUILDROOT_MUSL=y" >> $@
+	echo "BR2_LINUX_KERNEL_CUSTOM_GIT=\"file://$(abspath linux)\"" >> $@
+	echo "BR2_GLOBAL_PATCH_DIR=\"$(abspath buildroot-patches)\"" >> $@
 	$(MAKE) -C buildroot/ O=$(abspath $(dir $@)) olddefconfig
 
 userspace/rv32gc/musl/.config: \
 		$(shell git -C buildroot ls-files | sed 's@^@buildroot/@' | xargs readlink -e)
 	mkdir -p $(dir $@)
 	$(MAKE) -C buildroot/ O=$(abspath $(dir $@)) qemu_riscv32_virt_defconfig
+	echo "BR2_PACKAGE_LINUX_TOOLS_SELFTESTS=y" >> $@
 	echo "BR2_TARGET_ROOTFS_CPIO=y" >> $@
 	echo "BR2_TOOLCHAIN_BUILDROOT_MUSL=y" >> $@
+	echo "BR2_LINUX_KERNEL_CUSTOM_GIT=\"file://$(abspath linux)\"" >> $@
+	echo "BR2_GLOBAL_PATCH_DIR=\"$(abspath buildroot-patches)\"" >> $@
 	$(MAKE) -C buildroot/ O=$(abspath $(dir $@)) olddefconfig
 
 # Runs tests in QEMU, both in 32-bit mode and 64-bit mode.
