@@ -41,7 +41,7 @@ toolchain: toolchain/install.stamp
 
 toolchain/install.stamp: toolchain/Makefile
 	mkdir -p $(dir $@)
-	$(MAKE) -C $(dir $<) |& tee toolchain/build.log
+	$(MAKE) -C $(dir $<) stamps/build-gcc-linux-stage2 |& tee toolchain/build.log
 	date > $@
 
 toolchain/Makefile: riscv-gnu-toolchain/configure
