@@ -274,7 +274,7 @@ kernel/rv32gc/all%config/llvm/.config: \
 	$(MAKE) -C $(LINUX)/ O=$(abspath $(dir $@)) ARCH=riscv KCONFIG_ALLCONFIG=$(abspath $(LINUX)/arch/riscv/configs/32-bit.config) LLVM=1 $(word 3,$(subst /, ,$@))
 	touch -c $@
 
-%.c: %.y; :>>$@
+%.c: %.y; @:>>$@
 
 #check: extmod/stamp
 
