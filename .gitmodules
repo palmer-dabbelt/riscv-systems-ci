@@ -6,7 +6,7 @@
 	url = https://git.kernel.org/pub/scm/linux/kernel/git/riscv/linux.git
 [submodule "buildroot"]
 	path = buildroot
-	url = https://git.buildroot.net/buildroot
+	url = https://github.com/palmer-dabbelt/buildroot.git
 [submodule "riscv-gnu-toolchain"]
 	path = riscv-gnu-toolchain
 	url = https://github.com/palmer-dabbelt/riscv-gnu-toolchain.git
